@@ -1,0 +1,113 @@
+export type Stock = {
+  symbol: string;
+  name: string;
+  sector: string;
+  price: number;
+  change: number;
+  changePercent: number;
+  marketCap: string;
+  peRatio: string;
+  weekHigh: number;
+  weekLow: number;
+  sparkline: number[];
+  history: number[];
+  insight: string;
+  description: string;
+};
+
+export const stocks: Stock[] = [
+  {
+    symbol: "NVDA",
+    name: "NVIDIA Corporation",
+    sector: "Semiconductors",
+    price: 182.3,
+    change: 4.28,
+    changePercent: 2.4,
+    marketCap: "$4.44T",
+    peRatio: "52.8",
+    weekHigh: 195.95,
+    weekLow: 86.62,
+    sparkline: [18, 20, 17, 24, 22, 25, 23, 31, 29, 35, 32, 40],
+    history: [151, 154, 153, 158, 156, 161, 160, 166, 164, 170, 168, 175, 172, 178, 182.3],
+    insight:
+      "AI infrastructure demand remains a major growth driver, while valuation remains elevated compared with historical levels.",
+    description:
+      "NVIDIA designs accelerated computing platforms that power modern data centers, graphics, and artificial intelligence workloads.",
+  },
+  {
+    symbol: "AAPL",
+    name: "Apple Inc.",
+    sector: "Consumer Technology",
+    price: 255.2,
+    change: 2.07,
+    changePercent: 0.82,
+    marketCap: "$3.78T",
+    peRatio: "34.1",
+    weekHigh: 260.1,
+    weekLow: 164.08,
+    sparkline: [22, 23, 21, 24, 26, 24, 28, 29, 27, 31, 30, 35],
+    history: [236, 238, 237, 241, 240, 243, 242, 246, 245, 249, 248, 251, 250, 253, 255.2],
+    insight:
+      "Services growth and a loyal ecosystem continue to support resilience, while hardware upgrade cycles remain an important catalyst.",
+    description:
+      "Apple designs consumer devices and software, with a growing services business built around its global product ecosystem.",
+  },
+  {
+    symbol: "TSLA",
+    name: "Tesla, Inc.",
+    sector: "Automotive",
+    price: 421.5,
+    change: -5.13,
+    changePercent: -1.2,
+    marketCap: "$1.36T",
+    peRatio: "188.6",
+    weekHigh: 488.54,
+    weekLow: 138.8,
+    sparkline: [40, 37, 41, 35, 39, 33, 38, 31, 35, 29, 33, 27],
+    history: [388, 397, 391, 405, 399, 416, 409, 432, 425, 442, 437, 429, 435, 427, 421.5],
+    insight:
+      "Execution on autonomy and energy storage could broaden Tesla's growth profile, while vehicle margins and valuation remain key risks.",
+    description:
+      "Tesla builds electric vehicles, energy storage systems, and software focused on autonomy and sustainable transportation.",
+  },
+  {
+    symbol: "MSFT",
+    name: "Microsoft Corporation",
+    sector: "Software",
+    price: 510.2,
+    change: 2.75,
+    changePercent: 0.54,
+    marketCap: "$3.79T",
+    peRatio: "38.7",
+    weekHigh: 555.45,
+    weekLow: 344.79,
+    sparkline: [20, 22, 21, 25, 24, 27, 25, 29, 28, 32, 31, 34],
+    history: [486, 489, 487, 493, 491, 496, 494, 500, 498, 503, 501, 506, 504, 508, 510.2],
+    insight:
+      "Cloud expansion and AI product adoption remain central themes, with enterprise spending trends a useful signal to follow.",
+    description:
+      "Microsoft develops cloud services, productivity software, operating systems, and AI products for consumers and businesses.",
+  },
+  {
+    symbol: "AMZN",
+    name: "Amazon.com, Inc.",
+    sector: "E-commerce & Cloud",
+    price: 231.4,
+    change: 2.65,
+    changePercent: 1.16,
+    marketCap: "$2.44T",
+    peRatio: "36.9",
+    weekHigh: 242.52,
+    weekLow: 151.61,
+    sparkline: [16, 18, 17, 22, 20, 23, 22, 27, 25, 30, 29, 34],
+    history: [212, 214, 213, 217, 216, 220, 218, 222, 221, 226, 224, 228, 226, 229, 231.4],
+    insight:
+      "AWS demand and operating efficiency are important earnings drivers, while retail margins can remain sensitive to costs.",
+    description:
+      "Amazon operates a global commerce marketplace alongside AWS cloud infrastructure, digital services, and logistics networks.",
+  },
+];
+
+export function getStock(symbol: string) {
+  return stocks.find((stock) => stock.symbol === symbol.toUpperCase());
+}
