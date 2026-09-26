@@ -13,8 +13,8 @@ const quickQuestions = [
   "Explain today's market movement",
 ];
 
-export function AssistantConversation({ initialPrompt = "" }: { initialPrompt?: string }) {
-  const [draft, setDraft] = useState(initialPrompt);
+export function AssistantConversation() {
+  const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -30,6 +30,11 @@ export function AssistantConversation({ initialPrompt = "" }: { initialPrompt?: 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, pending]);
+
+  useEffect(() => {
+    const prompt = new URLSearchParams(window.location.search).get("prompt");
+    if (prompt) setDraft(prompt);
+  }, []);
 
   useEffect(() => () => {
     if (timer.current) clearTimeout(timer.current);
