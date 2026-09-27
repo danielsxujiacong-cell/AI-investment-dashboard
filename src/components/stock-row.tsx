@@ -21,9 +21,15 @@ export function StockRow({ stock }: { stock: Stock }) {
       </div>
       <div className="stock-price">
         <strong>{"$" + stock.price.toFixed(2)}</strong>
-        <span className={positive ? "positive-text" : "negative-text"}>
+        <span
+          className={positive ? "positive-text" : "negative-text"}
+          title={`${positive ? "+" : ""}${stock.change.toFixed(2)} (${positive ? "+" : ""}${stock.changePercent.toFixed(2)}%) today`}
+        >
           {positive ? "+" : ""}{stock.changePercent.toFixed(2)}%
         </span>
+        <small className={positive ? "positive-text" : "negative-text"}>
+          {positive ? "+$" : "-$"}{Math.abs(stock.change).toFixed(2)}
+        </small>
       </div>
       <span className="stock-row-chevron"><Icon name="chevron-right" size={16} /></span>
     </Link>

@@ -5,6 +5,10 @@ export type Stock = {
   price: number;
   change: number;
   changePercent: number;
+  open: number;
+  high: number;
+  low: number;
+  previousClose: number;
   marketCap: string;
   peRatio: string;
   weekHigh: number;
@@ -23,6 +27,10 @@ export const stocks: Stock[] = [
     price: 182.3,
     change: 4.28,
     changePercent: 2.4,
+    open: 178.5,
+    high: 183.2,
+    low: 177.9,
+    previousClose: 178.02,
     marketCap: "$4.44T",
     peRatio: "52.8",
     weekHigh: 195.95,
@@ -41,6 +49,10 @@ export const stocks: Stock[] = [
     price: 255.2,
     change: 2.07,
     changePercent: 0.82,
+    open: 253.5,
+    high: 256.1,
+    low: 252.9,
+    previousClose: 253.13,
     marketCap: "$3.78T",
     peRatio: "34.1",
     weekHigh: 260.1,
@@ -59,6 +71,10 @@ export const stocks: Stock[] = [
     price: 421.5,
     change: -5.13,
     changePercent: -1.2,
+    open: 427.1,
+    high: 429.4,
+    low: 419.8,
+    previousClose: 426.63,
     marketCap: "$1.36T",
     peRatio: "188.6",
     weekHigh: 488.54,
@@ -77,6 +93,10 @@ export const stocks: Stock[] = [
     price: 510.2,
     change: 2.75,
     changePercent: 0.54,
+    open: 508.2,
+    high: 512.5,
+    low: 506.8,
+    previousClose: 507.45,
     marketCap: "$3.79T",
     peRatio: "38.7",
     weekHigh: 555.45,
@@ -95,6 +115,10 @@ export const stocks: Stock[] = [
     price: 231.4,
     change: 2.65,
     changePercent: 1.16,
+    open: 229.1,
+    high: 232.8,
+    low: 228.4,
+    previousClose: 228.75,
     marketCap: "$2.44T",
     peRatio: "36.9",
     weekHigh: 242.52,

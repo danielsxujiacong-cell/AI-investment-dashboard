@@ -1,4 +1,4 @@
-// MOCK_AI — replace this response layer with an OpenAI-backed implementation in STEP 4.
+// Keep the mock response layer until STEP 3 is resumed with OPENAI_API_KEY configured.
 export function getMockAiResponse(prompt: string) {
   const normalized = prompt.toLowerCase();
 

@@ -163,6 +163,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .stock-price { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
 .stock-price strong { color: #dfe3e6; font-size: 10px; font-weight: 560; letter-spacing: .015em; }
 .stock-price span { font-size: 9px; font-weight: 580; }
+.stock-price small { font-size: 8px; font-weight: 550; }
 .positive-text { color: #9bcba6 !important; }
 .negative-text { color: #d39392 !important; }
 .stock-row-chevron { display: flex; justify-content: flex-end; color: #626a74; opacity: 0; transition: opacity .18s,transform .18s; }
@@ -224,6 +225,15 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .watchlist-full-card .stock-row { min-height: 68px; grid-template-columns: minmax(0,1fr) 88px 86px 14px; }
 .watchlist-note { display: flex; align-items: center; gap: 8px; margin-top: 8px; padding: 12px 2px 0; border-top: 1px solid rgba(226,232,239,.05); color: #717984; font-size: 9px; }
 .watchlist-note .live-dot { width: 5px; height: 5px; }
+.market-data-status { display: inline-flex; align-items: flex-start; gap: 8px; color: #858d96; font-size: 9px; line-height: 1.5; }
+.market-data-status .live-dot { width: 5px; height: 5px; flex: 0 0 auto; margin-top: 3px; }
+.market-data-status-live { color: #9bcba6; }
+.market-data-status-live .live-dot { background: #8fbd9c; box-shadow: 0 0 8px rgba(143,189,156,.28); }
+.market-data-status-loading .live-dot { background: #c5ad77; animation: market-data-pulse 1.2s ease-in-out infinite; }
+.market-data-status-partial,.market-data-status-mock { color: #c8a393; }
+.market-data-status-partial .live-dot,.market-data-status-mock .live-dot { background: #c18f7a; }
+.market-data-status-detail { max-width: 280px; justify-content: flex-end; text-align: right; }
+@keyframes market-data-pulse { 50% { opacity: .35; } }
 .empty-search { display: flex; min-height: 170px; flex-direction: column; align-items: center; justify-content: center; color: #757d87; }
 .empty-search p { margin: 11px 0 3px; color: #c1c7c4; font-size: 12px; }
 .empty-search span { color: #757d87; font-size: 9px; }

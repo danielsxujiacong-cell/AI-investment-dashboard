@@ -8,17 +8,17 @@
 
 已完成具有 Apple 与 Linear 风格的深色投资 Dashboard，使用假数据支持首页、关注列表、股票详情、AI 对话、组合和每日简报，并验证桌面与手机布局。
 
-## STEP 2：网站部署上线
+## STEP 2：静态网站部署上线
 
-下一步：将 MVP 部署到 Vercel 并完成基础线上验证。
+GitHub Pages 保留为静态前端部署目标。
 
-## STEP 3：接入真实股票行情 API
+## STEP 2.5：线上真实行情 API
 
-评估并接入 Polygon 或 Alpha Vantage 等行情数据服务。
+Cloudflare Worker API Proxy 已部署，服务端读取 Finnhub Key；五只股票的公网 API 已验证。Pages Worker URL 已配置，待推送静态前端并验证线上页面与手机访问。
 
-## STEP 4：接入 OpenAI API
+## STEP 3：OpenAI API（待以后配置）
 
-为 AI 对话和市场简报接入 OpenAI API。
+暂不接入 OpenAI API。保留当前 Mock AI 页面与回复逻辑；以后配置 OPENAI_API_KEY 后再继续。
 
 ## STEP 5：用户系统和数据库
 

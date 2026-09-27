@@ -12,10 +12,10 @@ export default function WatchlistPage() {
           <h1>Watchlist<span className="heading-period">.</span></h1>
           <p>A focused view of the companies on your mind.</p>
         </div>
-        <div className="watchlist-page-badge"><span className="live-dot" /> 5 symbols <span className="badge-separator">/</span> Mock data</div>
+        <div className="watchlist-page-badge"><span className="live-dot" /> 5 symbols <span className="badge-separator">/</span> Finnhub with Mock fallback</div>
       </div>
       <WatchlistExplorer />
-      <div className="watchlist-page-footnote"><span>↗</span> Prices, movements, and charts are simulated for this product preview.</div>
+      <div className="watchlist-page-footnote"><span>↗</span> Finnhub quotes are used when available; existing Mock Data remains the fallback.</div>
     </div>
   );
 }

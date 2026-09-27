@@ -10,6 +10,9 @@ build/
 .env
 .env.*
 !.env.example
+api-proxy/.dev.vars
+api-proxy/.env
+.wrangler/
 
 # Logs and generated output
 npm-debug.log*

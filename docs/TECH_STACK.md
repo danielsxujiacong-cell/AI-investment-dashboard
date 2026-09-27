@@ -6,8 +6,8 @@
 | UI | Tailwind CSS 4 + custom CSS | 当前采用 |
 | Charts | Inline SVG charts | MVP 当前采用；TradingView Lightweight Charts 可后续评估 |
 | Database | Supabase | 未来接入 |
-| AI | OpenAI API | 未来接入 |
-| Stock Data | Polygon / Alpha Vantage | 未来接入 |
-| Deployment | Vercel | STEP 2 计划采用 |
+| AI | Existing Mock AI | 当前采用；STEP 3 待以后配置 OPENAI_API_KEY |
+| Stock Data | Finnhub via Cloudflare Worker | Worker 部署与公网验证中 |
+| Deployment | GitHub Pages + Cloudflare Workers | 静态站已采用，行情 Proxy 待部署 |
 
-当前版本只使用本地 Mock Data；不接入真实行情 API、OpenAI API、Supabase、登录或交易功能。收益曲线和资产配置图使用轻量 SVG / CSS，没有额外图表库。
+收益曲线和资产配置图仍使用轻量 SVG / CSS。Portfolio holdings are demo data; no database, login, trading, RAG, or news search is included.
