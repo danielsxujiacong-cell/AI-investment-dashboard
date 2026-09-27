@@ -2,7 +2,7 @@
 
 ## Current state
 
-- Working checkout: D:/_2026/_NewSpace/04/_Workspace & Life/Codex project/Active/AI-investment-dashboard (G: is not available on this host).
+- Working checkout: D:/_Codex project/01_Active/AI-investment-dashboard (G: is not available on this host).
 - Branch: main.
 - STEP 2 and STEP 2.5 Finnhub client and Worker integration are committed to origin/main; the checkout is clean.
 - The .env.local Finnhub key is ignored by Git. No OpenAI API work is active.
