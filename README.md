@@ -6,14 +6,14 @@
 
 ## 当前状态
 
-当前正在完成 **STEP 2.5：线上真实行情**。GitHub Pages 保留静态前端，Finnhub Key 由 Cloudflare Worker 服务端读取；支持 NVDA、AAPL、TSLA、MSFT、AMZN，并在请求失败时回退到 Mock Data。AI Assistant 继续使用原有 Mock AI。
+**STEP 2.5：线上真实行情已完成。** GitHub Pages 保留静态前端，Finnhub Key 由 Cloudflare Worker 服务端读取；支持 NVDA、AAPL、TSLA、MSFT、AMZN，并在请求失败时回退到 Mock Data。AI Assistant 继续使用原有 Mock AI。
 
 ## 开发阶段
 
 - STEP 0：项目初始化（已完成）
 - STEP 1：MVP UI 开发（假数据，已完成）
 - STEP 2：GitHub Pages 静态网站部署（已采用）
-- STEP 2.5：Cloudflare Worker 行情代理（部署与公网验证中）
+- STEP 2.5：Cloudflare Worker 行情代理（已部署并通过公网验证）
 - STEP 3：OpenAI API（待以后配置 OPENAI_API_KEY）
 - STEP 5：用户系统和数据库
 - STEP 6：个人 AI 投资助手

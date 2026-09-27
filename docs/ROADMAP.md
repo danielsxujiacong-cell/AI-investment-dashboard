@@ -14,7 +14,7 @@ GitHub Pages 保留为静态前端部署目标。
 
 ## STEP 2.5：线上真实行情 API
 
-Cloudflare Worker API Proxy 已部署，服务端读取 Finnhub Key；五只股票的公网 API 已验证。Pages Worker URL 已配置，待推送静态前端并验证线上页面与手机访问。
+Cloudflare Worker API Proxy 与 GitHub Pages 前端均已部署；五只股票的公网行情 API、关注列表和 NVDA 详情页已验证。Finnhub Key 仅由 Worker 服务端读取。
 
 ## STEP 3：OpenAI API（待以后配置）
 

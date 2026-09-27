@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2026-09-27
 
 - Added a Cloudflare Worker API proxy for Finnhub quotes while keeping the Finnhub key server-side.
-- Kept the existing Mock AI assistant; STEP 3 OpenAI integration is deferred until OPENAI_API_KEY is configured.
+- Verified the GitHub Pages deployment and all five public Finnhub quote endpoints. The existing Mock AI assistant remains; STEP 3 is deferred until OPENAI_API_KEY is configured.
