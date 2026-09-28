@@ -13,7 +13,8 @@
 - STEP 3 remains deferred; `src/data/mockAi.ts` is the existing mock response layer for a future server-side OpenAI adapter.
 - Local `npm run build` passed. Overview, Watchlist, Portfolio, Assistant, and all five stock routes returned HTTP 200; the local dev server emitted no route errors.
 - Finnhub Worker returned valid current/open/high/low/previous-close fields for NVDA, AAPL, TSLA, MSFT, and AMZN. `.env.local` and `api-proxy/.dev.vars` are absent and neither secret file is tracked.
+- Release commit `9cb2702` was pushed to `main`; GitHub Pages build and deploy both succeeded. Public Overview, Watchlist, Portfolio, Assistant, and NVDA pages returned HTTP 200; published CSS contains Light theme and mobile breakpoints, and public JS contains neither API-key name nor assignment.
 
 ## Next action
 
-The Codex browser tool timed out while binding to the browser, so visual theme toggling, mobile appearance, and browser-console inspection remain unverified. Next: commit and push this change, then check GitHub Pages deployment and public routes. STEP 3 remains deferred until `OPENAI_API_KEY` is available.
+The Codex browser tool timed out while binding to the browser, so visual theme toggling, mobile appearance, and browser-console inspection remain unverified. Next: complete visual desktop/mobile theme and console checks when browser interaction is available. STEP 3 remains deferred until `OPENAI_API_KEY` is available.
