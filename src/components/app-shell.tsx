@@ -80,7 +80,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   }
 
-  const section = navigation.find((item) => item.href === pathname) ?? {
+  const normalizedPathname = pathname.replace(/\/+$/, "") || "/";
+  const section = navigation.find((item) => (item.href.replace(/\/+$/, "") || "/") === normalizedPathname) ?? {
     label: "Company overview",
     href: pathname,
     icon: "watchlist" as IconName,

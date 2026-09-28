@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { AppShell } from "@/components/app-shell";
+import { PersonalDataProvider } from "@/components/personal-data-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -24,7 +25,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   document.documentElement.dataset.theme = "dark";
 }`}
         </Script>
-        <AppShell>{children}</AppShell>
+        <PersonalDataProvider>
+          <AppShell>{children}</AppShell>
+        </PersonalDataProvider>
       </body>
     </html>
   );

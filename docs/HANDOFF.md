@@ -2,19 +2,14 @@
 
 ## Current state
 
-- Working checkout: D:/_Codex project/01_Active/AI-investment-dashboard (G: is not available on this host).
-- Branch: main.
-- STEP 2 and STEP 2.5 Finnhub client and Worker integration are committed to origin/main; the checkout is clean.
-- The .env.local Finnhub key is ignored by Git. No OpenAI API work is active.
-- The original Mock AI page is retained. STEP 3 is deferred until OPENAI_API_KEY is configured.
-- Cloudflare Worker is deployed at `https://ai-investment-dashboard-api.ai-investment-dashboard.workers.dev`; all five public Finnhub quote routes were verified.
-- GitHub `MARKET_API_BASE_URL` is configured. GitHub Pages deployment succeeded; the published JavaScript includes the Worker URL and no Finnhub key.
-- Light / Dark theme toggle is implemented with system preference, local persistence, and theme-specific surface, text, chart, and market-color styling.
-- STEP 3 remains deferred; `src/data/mockAi.ts` is the existing mock response layer for a future server-side OpenAI adapter.
-- Local `npm run build` passed. Overview, Watchlist, Portfolio, Assistant, and all five stock routes returned HTTP 200; the local dev server emitted no route errors.
-- Finnhub Worker returned valid current/open/high/low/previous-close fields for NVDA, AAPL, TSLA, MSFT, and AMZN. `.env.local` and `api-proxy/.dev.vars` are absent and neither secret file is tracked.
-- Release commit `9cb2702` was pushed to `main`; GitHub Pages build and deploy both succeeded. Public Overview, Watchlist, Portfolio, Assistant, and NVDA pages returned HTTP 200; published CSS contains Light theme and mobile breakpoints, and public JS contains neither API-key name nor assignment.
+- Canonical checkout: `D:\_Codex project\01_Active\AI-investment-dashboard`, branch `main`.
+- V4 Personal Investment System is implemented on top of the existing static Next.js app and Finnhub Worker integration.
+- Personal holdings, per-symbol Investment Memory, and Investment Notes use one versioned localStorage store. Data stays on the current device.
+- Portfolio values use the current quote from the existing Finnhub hook and retain its Mock Data fallback.
+- AI Assistant remains Mock AI and can read the portfolio, Investment Memory, and existing Watchlist from Personal Context. No OpenAI API, Supabase, login, or trading integration was added.
+- `npm run build` passed. Browser interaction checks covered holding add/edit and refresh persistence, memory save and refresh, note add/edit and refresh, AI context/reply, Light/Dark toggle, and a 390 px mobile viewport with no horizontal overflow. Browser console error log was empty.
+- README, product, technical stack, roadmap, changelog, and this handoff describe V4 behavior.
 
 ## Next action
 
-The Codex browser tool timed out while binding to the browser, so visual theme toggling, mobile appearance, and browser-console inspection remain unverified. Next: complete visual desktop/mobile theme and console checks when browser interaction is available. STEP 3 remains deferred until `OPENAI_API_KEY` is available.
+Commit the V4 changes to `main`, push to `origin`, then wait for GitHub Pages and verify the published pages and public Finnhub quote behavior. Keep `.env.local` and `api-proxy/.dev.vars` out of Git. OpenAI API, Supabase, login, and trading remain out of scope.

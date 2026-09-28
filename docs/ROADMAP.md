@@ -20,6 +20,10 @@ Cloudflare Worker API Proxy 与 GitHub Pages 前端均已部署；五只股票�
 
 V1–V3 现有产品结构保留，AI Assistant 继续使用 Mock AI，待以后配置 `OPENAI_API_KEY` 后再接入服务端 Responses API。Light / Dark Mode 已加入，首次访问跟随系统偏好，用户选择保存在浏览器本地。
 
+## V4：Personal Investment System
+
+已完成可编辑的本地持仓、基于 Finnhub 行情的持仓估值与未实现盈亏、每只股票的 Investment Memory、Investment Notes，以及引用这些本机数据的 Mock AI Personal Context。数据保存在当前设备的 localStorage，不跨设备同步；V4 不接入 OpenAI API、Supabase、登录或自动交易。
+
 ## STEP 3：OpenAI API（待以后配置）
 
 暂不接入 OpenAI API。保留当前 Mock AI 页面与回复逻辑；以后配置 OPENAI_API_KEY 后再继续。

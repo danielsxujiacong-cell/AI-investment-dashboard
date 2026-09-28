@@ -4,6 +4,7 @@ import Link from "next/link";
 import { PerformanceChart } from "@/components/charts";
 import { Icon } from "@/components/icons";
 import { MarketDataStatusMessage } from "@/components/market-data-status";
+import { InvestmentMemoryEditor } from "@/components/investment-memory-editor";
 import { useStockMarketData } from "@/hooks/use-stock-market-data";
 import type { Stock } from "@/data/stocks";
 
@@ -65,6 +66,7 @@ export function StockDetailClient({ initialStock }: { initialStock: Stock }) {
       </section>
 
       <div className="stock-about"><span className="eyebrow">ABOUT {stock.symbol}</span><p>{stock.description}</p></div>
+      <InvestmentMemoryEditor symbol={stock.symbol} />
     </div>
   );
 }

@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { getMockAiResponse } from "@/data/mockAi";
+import { usePersonalData } from "@/components/personal-data-provider";
+import { stocks } from "@/data/stocks";
 import { Icon } from "@/components/icons";
 
 type Message = { id: number; role: "assistant" | "user"; text: string };
@@ -14,6 +16,7 @@ const quickQuestions = [
 ];
 
 export function AssistantConversation() {
+  const { data, ready, storageAvailable } = usePersonalData();
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -51,7 +54,15 @@ export function AssistantConversation() {
     setPending(true);
 
     timer.current = setTimeout(() => {
-      setMessages((current) => [...current, { id: assistantId, role: "assistant", text: getMockAiResponse(prompt) }]);
+      setMessages((current) => [...current, {
+        id: assistantId,
+        role: "assistant",
+        text: getMockAiResponse(prompt, {
+          portfolio: data.portfolio,
+          investmentMemory: data.investmentMemory,
+          watchlistSymbols: stocks.map((stock) => stock.symbol),
+        }),
+      }]);
       setPending(false);
     }, 720);
   }
@@ -66,6 +77,54 @@ export function AssistantConversation() {
           <p>Ask a question about the companies and portfolio in your workspace.</p>
         </div>
       </div>
+
+      <section className="card personal-context-card" aria-label="Personal Context">
+        <div className="panel-heading">
+          <div><span className="eyebrow">AVAILABLE TO MOCK AI</span><h2>Personal Context</h2></div>
+          <span className="mock-label"><i /> LOCAL ONLY</span>
+        </div>
+        {!ready ? <p className="context-empty">Loading your saved context…</p> : (
+          <div className="personal-context-grid">
+            <div className="context-group">
+              <span className="eyebrow">MY HOLDINGS & MEMORY</span>
+              {data.portfolio.length === 0 && Object.keys(data.investmentMemory).length === 0 ? (
+                <p className="context-empty">No holdings or investment memory saved yet.</p>
+              ) : (
+                <ul>
+                  {data.portfolio.map((holding) => {
+                    const memory = data.investmentMemory[holding.symbol];
+                    return (
+                      <li key={holding.id}>
+                        <strong>{holding.symbol}</strong><span>Holding: {holding.shares} {holding.shares === 1 ? "share" : "shares"}</span>
+                        {memory?.buyThesis && <span>Thesis: {memory.buyThesis}</span>}
+                        {memory?.whyWatching && <span>Watching: {memory.whyWatching}</span>}
+                        {memory?.risks && <span>Risk: {memory.risks}</span>}
+                        {memory?.exitConditions && <span>Exit: {memory.exitConditions}</span>}
+                        {memory?.personalNotes && <span>Note: {memory.personalNotes}</span>}
+                      </li>
+                    );
+                  })}
+                  {Object.entries(data.investmentMemory).filter(([symbol]) => !data.portfolio.some((holding) => holding.symbol === symbol)).map(([symbol, memory]) => (
+                    <li key={symbol}>
+                      <strong>{symbol}</strong>
+                      {memory.buyThesis && <span>Thesis: {memory.buyThesis}</span>}
+                      {memory.whyWatching && <span>Watching: {memory.whyWatching}</span>}
+                      {memory.risks && <span>Risk: {memory.risks}</span>}
+                      {memory.exitConditions && <span>Exit: {memory.exitConditions}</span>}
+                      {memory.personalNotes && <span>Note: {memory.personalNotes}</span>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className="context-group watchlist-context-group">
+              <span className="eyebrow">MY WATCHLIST</span>
+              <div className="context-symbols">{stocks.map((stock) => <span key={stock.symbol}>{stock.symbol}</span>)}</div>
+            </div>
+          </div>
+        )}
+        <p className="personal-data-notice">Personal data is stored locally on this device.{!storageAvailable ? " Local storage is unavailable; changes last for this visit." : ""}</p>
+      </section>
 
       <div className="quick-prompts">
         {quickQuestions.map((question, index) => (
@@ -106,7 +165,7 @@ export function AssistantConversation() {
           <span className="composer-hint">MOCK DATA</span>
           <button type="submit" aria-label="Send message" disabled={!draft.trim() || pending}><Icon name="send" size={17} /></button>
         </form>
-        <p className="assistant-disclaimer">AI responses are simulated and for demonstration only. They do not use live market data.</p>
+        <p className="assistant-disclaimer">Replies are simulated and may reference the personal context shown above. No external AI service is used.</p>
       </section>
     </div>
   );

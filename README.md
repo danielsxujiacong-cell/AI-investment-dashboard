@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-**STEP 2.5：线上真实行情已完成。** GitHub Pages 保留静态前端，Finnhub Key 由 Cloudflare Worker 服务端读取；首页关注卡片、Watchlist 和股票详情支持 NVDA、AAPL、TSLA、MSFT、AMZN，并在请求失败时回退到 Mock Data。AI Assistant 继续使用原有 Mock AI，STEP 3 等配置 `OPENAI_API_KEY` 后再继续。
+**V4 Personal Investment System 已完成。** Portfolio 支持管理个人持仓，并用 Finnhub 当前行情计算市值、成本和未实现盈亏；股票详情可保存个人投资逻辑，Portfolio 可记录投资日志。AI Assistant 仍使用 Mock AI，可读取本机保存的持仓、投资记忆和现有 Watchlist。个人数据保存在当前设备的 localStorage，不会跨设备同步。Finnhub Key 仍由 Cloudflare Worker 服务端读取，行情请求失败时继续回退到 Mock Data。
 
 ## 开发阶段
 
@@ -14,7 +14,8 @@
 - STEP 1：MVP UI 开发（假数据，已完成）
 - STEP 2：GitHub Pages 静态网站部署（已采用）
 - STEP 2.5：Cloudflare Worker 行情代理（已部署并通过公网验证）
-- STEP 3：OpenAI API（待以后配置 OPENAI_API_KEY）
+- V4：Personal Investment System（已完成，本机 localStorage）
+- STEP 3：OpenAI API（仍暂缓；当前不连接外部 AI 服务）
 - STEP 5：用户系统和数据库
 - STEP 6：个人 AI 投资助手
 
@@ -31,8 +32,10 @@
 - NVDA、AAPL、TSLA、MSFT、AMZN 的实时行情、关注列表和股票详情；保留 Mock Data 回退
 - 行情 Loading、失败状态和 Last updated 时间
 - Light / Dark Mode，首次跟随系统主题并保存用户选择
-- Portfolio 资产配置图、持仓和收益摘要
-- AI Assistant 快捷问题、文字输入、加载动画和模拟回复
+- Portfolio 新增、编辑和删除个人持仓；按 Finnhub 当前价格计算市值、成本和未实现盈亏
+- 股票详情中的个人 Investment Memory，以及可新增、编辑和删除的 Investment Notes
+- AI Assistant 快捷问题、文字输入、加载动画和 Mock 回复；Personal Context 显示并可引用本地持仓、投资记忆和 Watchlist
+- 个人投资数据保存在当前设备的 localStorage，不会跨电脑或手机同步
 - 可展开的每日 AI 市场简报
 - 桌面侧边栏与手机底部导航
 
@@ -65,6 +68,6 @@ node node_modules/wrangler/bin/wrangler.js deploy --config api-proxy/wrangler.js
 
 ## 后续计划
 
-完成 STEP 2.5 的 Cloudflare Worker 部署、GitHub Pages URL 配置和手机公网验证。STEP 3 暂缓，等配置 `OPENAI_API_KEY` 后再继续；在此之前 AI Assistant 使用 Mock AI。
+V4 已完成，继续保留 Mock AI、Finnhub Mock fallback 和设备本地数据存储。当前版本不启用 OpenAI API、登录、数据库或自动交易；个人数据不会跨设备同步。
 
 详见 [开发路线](docs/ROADMAP.md)、[产品说明](docs/PRODUCT.md) 和 [技术方案](docs/TECH_STACK.md)。
