@@ -2,9 +2,8 @@ import Link from "next/link";
 import { PerformanceChart } from "@/components/charts";
 import { Icon } from "@/components/icons";
 import { MarketBriefCard } from "@/components/market-brief-card";
-import { SectionHeading, StockRow } from "@/components/stock-row";
+import { OverviewWatchlist } from "@/components/overview-watchlist";
 import { portfolio } from "@/data/portfolio";
-import { stocks } from "@/data/stocks";
 
 export default function DashboardPage() {
   return (
@@ -53,16 +52,7 @@ export default function DashboardPage() {
       </section>
 
       <div className="dashboard-grid">
-        <section className="card watchlist-card">
-          <div className="card-section-header">
-            <SectionHeading eyebrow="YOUR MARKET RADAR" title="Watchlist" action={<Link href="/watchlist" className="subtle-link">See all <Icon name="arrow-right" size={14} /></Link>} />
-            <span className="watchlist-live"><i className="live-dot" /> MARKET OPEN</span>
-          </div>
-          <div className="watchlist-rows">
-            {stocks.map((stock) => <StockRow key={stock.symbol} stock={stock} />)}
-          </div>
-          <Link href="/watchlist" className="watchlist-footer-link"><span><Icon name="plus" size={15} /> View all companies</span><Icon name="arrow-right" size={15} /></Link>
-        </section>
+        <OverviewWatchlist />
 
         <MarketBriefCard />
       </div>

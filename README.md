@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-**STEP 2.5：线上真实行情已完成。** GitHub Pages 保留静态前端，Finnhub Key 由 Cloudflare Worker 服务端读取；支持 NVDA、AAPL、TSLA、MSFT、AMZN，并在请求失败时回退到 Mock Data。AI Assistant 继续使用原有 Mock AI。
+**STEP 2.5：线上真实行情已完成。** GitHub Pages 保留静态前端，Finnhub Key 由 Cloudflare Worker 服务端读取；首页关注卡片、Watchlist 和股票详情支持 NVDA、AAPL、TSLA、MSFT、AMZN，并在请求失败时回退到 Mock Data。AI Assistant 继续使用原有 Mock AI，STEP 3 等配置 `OPENAI_API_KEY` 后再继续。
 
 ## 开发阶段
 
@@ -30,6 +30,7 @@
 - Dashboard 首页、模拟投资组合收益曲线和 Market Open 状态
 - NVDA、AAPL、TSLA、MSFT、AMZN 的实时行情、关注列表和股票详情；保留 Mock Data 回退
 - 行情 Loading、失败状态和 Last updated 时间
+- Light / Dark Mode，首次跟随系统主题并保存用户选择
 - Portfolio 资产配置图、持仓和收益摘要
 - AI Assistant 快捷问题、文字输入、加载动画和模拟回复
 - 可展开的每日 AI 市场简报

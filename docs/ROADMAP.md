@@ -14,7 +14,11 @@ GitHub Pages 保留为静态前端部署目标。
 
 ## STEP 2.5：线上真实行情 API
 
-Cloudflare Worker API Proxy 与 GitHub Pages 前端均已部署；五只股票的公网行情 API、关注列表和 NVDA 详情页已验证。Finnhub Key 仅由 Worker 服务端读取。
+Cloudflare Worker API Proxy 与 GitHub Pages 前端均已部署；五只股票的公网行情 API、关注列表和股票详情页已验证。Finnhub Key 仅由 Worker 服务端读取。Overview、Watchlist 和详情页使用实时行情并保留 Mock 回退。
+
+## V3 及主题模式
+
+V1–V3 现有产品结构保留，AI Assistant 继续使用 Mock AI，待以后配置 `OPENAI_API_KEY` 后再接入服务端 Responses API。Light / Dark Mode 已加入，首次访问跟随系统偏好，用户选择保存在浏览器本地。
 
 ## STEP 3：OpenAI API（待以后配置）
 

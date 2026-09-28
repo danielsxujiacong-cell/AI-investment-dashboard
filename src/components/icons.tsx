@@ -7,6 +7,8 @@ export type IconName =
   | "assistant"
   | "search"
   | "bell"
+  | "sun"
+  | "moon"
   | "arrow-up-right"
   | "arrow-down-right"
   | "arrow-right"
@@ -28,6 +30,8 @@ const iconPaths: Record<IconName, ReactNode> = {
   assistant: <><path d="M12 3.2 13.6 9l5.8 1.6-5.8 1.6-1.6 5.8-1.6-5.8-5.8-1.6L10.4 9 12 3.2Z" /><path d="m19 15 .9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15Z" /></>,
   search: <><circle cx="10.8" cy="10.8" r="6.6" /><path d="m16 16 4.5 4.5" /></>,
   bell: <><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z" /><path d="M10 21h4" /></>,
+  sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" /></>,
+  moon: <path d="M20.8 14.2A8.7 8.7 0 0 1 9.8 3.2 8.8 8.8 0 1 0 20.8 14.2Z" />,
   "arrow-up-right": <><path d="M7 17 17 7M8 7h9v9" /></>,
   "arrow-down-right": <><path d="M7 7 17 17M8 17h9V8" /></>,
   "arrow-right": <><path d="M4.5 12h15M13 5.5l6.5 6.5-6.5 6.5" /></>,

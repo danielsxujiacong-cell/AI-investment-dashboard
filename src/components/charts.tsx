@@ -46,8 +46,8 @@ export function PerformanceChart({ data, label = "Portfolio value over time" }: 
       <svg viewBox={"0 0 " + width + " " + height} preserveAspectRatio="none" role="img" aria-label={label}>
         <defs>
           <linearGradient id="portfolioFill" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="#8ab99d" stopOpacity=".22" />
-            <stop offset="100%" stopColor="#8ab99d" stopOpacity="0" />
+            <stop offset="0%" stopColor="var(--chart-fill)" stopOpacity=".22" />
+            <stop offset="100%" stopColor="var(--chart-fill)" stopOpacity="0" />
           </linearGradient>
         </defs>
         <g className="chart-grid">
@@ -57,8 +57,8 @@ export function PerformanceChart({ data, label = "Portfolio value over time" }: 
           <line x1="0" y1="188" x2={width} y2="188" />
         </g>
         <path d={areaPath} fill="url(#portfolioFill)" />
-        <path d={linePath} fill="none" stroke="#a1cbb0" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-        <circle cx={last.x} cy={last.y} r="4" fill="#a1cbb0" className="chart-marker" />
+        <path d={linePath} fill="none" stroke="var(--chart-line)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+        <circle cx={last.x} cy={last.y} r="4" fill="var(--chart-line)" className="chart-marker" />
       </svg>
     </div>
   );
