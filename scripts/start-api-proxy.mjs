@@ -11,7 +11,7 @@ const wranglerPath = resolve(projectRoot, "node_modules", "wrangler", "bin", "wr
 function readSecretValues(contents) {
   const values = new Map();
   for (const line of contents.split(/\r?\n/)) {
-    const match = line.match(/^\s*(FINNHUB_API_KEY)\s*=\s*(.*?)\s*$/);
+    const match = line.match(/^\s*(FINNHUB_API_KEY|MASSIVE_API_KEY)\s*=\s*(.*?)\s*$/);
     if (!match) continue;
 
     let value = match[2];
@@ -36,12 +36,12 @@ try {
 }
 
 const secrets = readSecretValues(envContents);
-if (!secrets.get("FINNHUB_API_KEY")) {
-  console.error("Add FINNHUB_API_KEY to .env.local before starting the API proxy.");
+if (secrets.size === 0) {
+  console.error("Add FINNHUB_API_KEY and/or MASSIVE_API_KEY to .env.local before starting the API proxy.");
   process.exit(1);
 }
 
-const workerEnv = ["FINNHUB_API_KEY"]
+const workerEnv = ["FINNHUB_API_KEY", "MASSIVE_API_KEY"]
   .filter((name) => secrets.has(name))
   .map((name) => name + "=" + JSON.stringify(secrets.get(name)))
   .join("\n");

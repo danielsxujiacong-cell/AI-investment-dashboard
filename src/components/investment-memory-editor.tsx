@@ -29,8 +29,9 @@ export function InvestmentMemoryEditor({ symbol }: { symbol: string }) {
 
   function save(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const hasContent = Object.values(draft).some((value) => value.trim().length > 0);
     appliedSymbol.current = symbol;
-    appliedMemory.current = draft;
+    appliedMemory.current = hasContent ? draft : emptyInvestmentMemory;
     saveInvestmentMemory(symbol, draft);
     setSaved(true);
   }

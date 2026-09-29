@@ -5,7 +5,11 @@ export type MarketHistoryRange = (typeof marketHistoryRanges)[number];
 
 export type HistoricalPricePoint = {
   timestamp: number;
+  open: number;
+  high: number;
+  low: number;
   close: number;
+  volume: number;
 };
 
 
@@ -57,16 +61,29 @@ function parseCandles(payload: unknown): HistoricalPricePoint[] {
     const candle = item as Record<string, unknown>;
     if (
       typeof candle.timestamp !== "number" || !Number.isFinite(candle.timestamp) ||
-      typeof candle.close !== "number" || !Number.isFinite(candle.close) || candle.close <= 0
+      typeof candle.open !== "number" || !Number.isFinite(candle.open) || candle.open <= 0 ||
+      typeof candle.high !== "number" || !Number.isFinite(candle.high) || candle.high <= 0 ||
+      typeof candle.low !== "number" || !Number.isFinite(candle.low) || candle.low <= 0 ||
+      typeof candle.close !== "number" || !Number.isFinite(candle.close) || candle.close <= 0 ||
+      typeof candle.volume !== "number" || !Number.isFinite(candle.volume) || candle.volume < 0 ||
+      candle.high < candle.low || candle.high < candle.open || candle.high < candle.close ||
+      candle.low > candle.open || candle.low > candle.close
     ) return [];
-    return [{ timestamp: candle.timestamp, close: candle.close }];
+    return [{
+      timestamp: candle.timestamp,
+      open: candle.open,
+      high: candle.high,
+      low: candle.low,
+      close: candle.close,
+      volume: candle.volume,
+    }];
   }).sort((a, b) => a.timestamp - b.timestamp);
 
   if (points.length < 2) throw new Error("There is not enough historical price data for this range.");
   return points;
 }
 
-export function getHistoricalPrices(symbol: string, range: MarketHistoryRange) {
+function loadBaseHistory(symbol: string, range: "1D" | "1Y") {
   const key = symbol + ":" + range;
   const cached = historyCache.get(key);
   if (cached && cached.expiresAt > Date.now()) return cached.promise;
@@ -86,11 +103,28 @@ export function getHistoricalPrices(symbol: string, range: MarketHistoryRange) {
     });
 
   historyCache.set(key, {
-    expiresAt: Date.now() + (range === "1D" ? 30_000 : 180_000),
+    expiresAt: Date.now() + (range === "1D" ? 30_000 : 300_000),
     promise: request,
   });
   void request.catch(() => {
     if (historyCache.get(key)?.promise === request) historyCache.delete(key);
   });
   return request;
+}
+
+const rangeDays: Partial<Record<MarketHistoryRange, number>> = {
+  "1W": 7,
+  "1M": 30,
+  "3M": 92,
+};
+
+export async function getHistoricalPrices(symbol: string, range: MarketHistoryRange) {
+  const baseRange = range === "1D" ? "1D" : "1Y";
+  const candles = await loadBaseHistory(symbol, baseRange);
+  if (range === "1D" || range === "1Y") return candles;
+
+  const cutoff = Date.now() - (rangeDays[range] ?? 365) * 24 * 60 * 60 * 1000;
+  const points = candles.filter((candle) => candle.timestamp >= cutoff);
+  if (points.length < 2) throw new Error("There is not enough historical price data for this range.");
+  return points;
 }

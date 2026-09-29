@@ -11,6 +11,6 @@
     "ALLOWED_ORIGINS": "https://danielsxujiacong-cell.github.io,http://localhost:3000,http://127.0.0.1:3000"
   },
   "secrets": {
-    "required": ["FINNHUB_API_KEY"]
+    "required": ["FINNHUB_API_KEY", "MASSIVE_API_KEY"]
   }
 }

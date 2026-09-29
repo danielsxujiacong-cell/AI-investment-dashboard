@@ -124,7 +124,7 @@ export function OverviewPortfolioPerformance() {
               <PerformanceChart
                 data={history.map((point) => point.value)}
                 isPositive={historyPositive}
-                label="Historical value of current holdings based on real Finnhub closing prices"
+                label="Historical value of current holdings based on real Massive closing prices"
               />
               <div className="chart-x-axis">{axisLabels.map((label, index) => <span key={index}>{label}</span>)}</div>
             </>
@@ -153,7 +153,7 @@ export function OverviewPortfolioPerformance() {
           </div>
           <Link href="/portfolio" className="text-action">View portfolio <Icon name="arrow-right" size={15} /></Link>
         </div>
-        {seriesAvailable && <p className="holdings-note">Historical value applies your current share counts to past closing prices; it does not include past trades or cash.</p>}
+        {seriesAvailable && <p className="holdings-note">Historical value applies your current share counts to Massive end-of-day closes; current holdings use Finnhub quotes. It does not include past trades or cash.</p>}
       </div>
       <aside className="overview-aside">
         <div className="aside-orbit orbit-one" /><div className="aside-orbit orbit-two" />

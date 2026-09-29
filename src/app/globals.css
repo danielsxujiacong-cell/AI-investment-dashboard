@@ -116,11 +116,18 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .performance-chart { width: 100%; height: 178px; }
 .performance-chart svg { display: block; width: 100%; height: 100%; overflow: visible; }
 .performance-chart.chart-negative { --chart-line: #c47f7f; --chart-fill: #c47f7f; }
+.candlestick-chart { width: 100%; height: 178px; }
+.candlestick-chart svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.candle line { stroke: currentColor; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.candle rect { fill: currentColor; }
+.candle-up { color: var(--green); }
+.candle-down { color: var(--red); }
 .chart-empty { display: flex; align-items: center; justify-content: center; min-height: 178px; padding: 14px; color: var(--muted); font-size: 11px; text-align: center; }
 .chart-error { color: #d29a91; overflow-wrap: anywhere; }
 .chart-grid line { stroke: rgba(218,225,232,.065); stroke-width: 1; stroke-dasharray: 2 5; vector-effect: non-scaling-stroke; }
 .chart-marker { stroke: #151b18; stroke-width: 3px; }
 .chart-x-axis { display: flex; justify-content: space-between; padding: 7px 2px 0; color: #737a84; font-size: 8px; font-weight: 600; letter-spacing: .08em; }
+.chart-data-note { margin: 6px 2px 0; color: var(--muted); font-size: 9px; }
 .overview-bottom { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 13px; padding-top: 12px; border-top: 1px solid rgba(226,232,239,.06); color: #898f98; font-size: 10px; }
 .overview-bottom>div { display: flex; align-items: center; gap: 8px; }
 .overview-bottom strong { color: #b3d1b9; font-weight: 600; }
@@ -366,7 +373,7 @@ a.holding-row:hover { background: rgba(255,255,255,.025); }
 .stock-chart-value { display: flex; align-items: baseline; gap: 10px; margin-top: 16px; }
 .stock-chart-value>span:first-child { color: #dce3df; font-size: 22px; font-weight: 540; letter-spacing: -.04em; }
 .stock-chart-value>span:last-child { font-size: 9px; font-weight: 620; }
-.stock-chart-card .performance-chart { height: 205px; margin-top: 12px; }
+.stock-chart-card .performance-chart, .stock-chart-card .candlestick-chart { height: 205px; margin-top: 12px; }
 .stock-chart-card .chart-empty { min-height: 205px; margin-top: 12px; border: 1px dashed var(--line); border-radius: 7px; }
 .chart-range-group { display: flex; align-items: center; gap: 3px; padding: 3px; border: 1px solid var(--line); border-radius: 7px; background: rgba(8,10,13,.32); }
 .chart-range-group button { min-width: 29px; padding: 5px 6px; border: 0; border-radius: 5px; color: #707781; background: transparent; font: inherit; font-size: 8px; text-align: center; cursor: pointer; }
@@ -520,7 +527,7 @@ a.holding-row:hover { background: rgba(255,255,255,.025); }
   .stock-detail-price { align-items: flex-start; padding-left: 60px; }
   .stock-detail-price strong { font-size: 26px; }
   .stock-chart-card { padding: 17px 13px 13px; }
-  .stock-chart-card .performance-chart { height: 157px; }
+  .stock-chart-card .performance-chart, .stock-chart-card .candlestick-chart { height: 157px; }
   .chart-range-group button { min-width: 23px; padding: 5px 4px; font-size: 7px; }
   .stock-metric-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
   .stock-metric-card { min-height: 91px; padding: 13px; }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { PerformanceChart } from "@/components/charts";
+import { CandlestickChart } from "@/components/charts";
 import { Icon } from "@/components/icons";
 import { MarketDataStatusMessage } from "@/components/market-data-status";
 import { InvestmentMemoryEditor } from "@/components/investment-memory-editor";
@@ -76,17 +76,14 @@ export function StockDetailClient({ initialStock }: { initialStock: Stock }) {
           </span>
         </div>
         {historical.status === "loading" ? (
-          <div className="chart-empty" role="status">Loading real Finnhub historical prices…</div>
+          <div className="chart-empty" role="status">Loading real Massive historical prices…</div>
         ) : historical.status === "error" ? (
           <div className="chart-empty chart-error" role="alert">{historical.error}</div>
         ) : (
           <>
-            <PerformanceChart
-              data={points.map((point) => point.close)}
-              isPositive={chartPositive}
-              label={stock.symbol + " real historical closing prices for " + range}
-            />
+            <CandlestickChart data={points} label={stock.symbol + " real Massive OHLC candles for " + range} />
             <div className="chart-x-axis">{axisLabels.map((label, index) => <span key={index}>{label}</span>)}</div>
+            <p className="chart-data-note">Massive Basic end-of-day history · current quotes from Finnhub</p>
           </>
         )}
       </section>

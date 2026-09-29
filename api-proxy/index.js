@@ -1,5 +1,7 @@
 const allowedSymbols = new Set(["NVDA", "AAPL", "TSLA", "MSFT", "AMZN"]);
 const rateBuckets = new Map();
+const historyCache = new Map();
+const massiveRequestTimes = [];
 
 function allowedOrigins(env) {
   return new Set(
@@ -73,141 +75,155 @@ function isCompleteQuote(quote) {
   );
 }
 
-const candleRanges = {
-  "1D": { resolution: "5", days: 2 },
-  "1W": { resolution: "60", days: 8 },
-  "1M": { resolution: "D", days: 32 },
-  "3M": { resolution: "D", days: 93 },
-  "1Y": { resolution: "D", days: 366 },
-};
+const historyRanges = { "1W": 7, "1M": 30, "3M": 92, "1Y": 366 };
 
-function isCompleteCandleData(payload) {
-  if (!payload || typeof payload !== "object" || payload.s !== "ok") return false;
-  const { c, h, l, o, t, v } = payload;
-  if (![c, h, l, o, t, v].every(Array.isArray) || c.length < 2) return false;
-  if (![h, l, o, t, v].every((values) => values.length === c.length)) return false;
-  const allFinite = [c, h, l, o, t, v].every((values) =>
-    values.every((value) => typeof value === "number" && Number.isFinite(value))
+function exchangeDate(timestamp) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date(timestamp));
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return values.year + "-" + values.month + "-" + values.day;
+}
+
+function exchangeDateDaysAgo(days) {
+  const [year, month, day] = exchangeDate(Date.now()).split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day - days)).toISOString().slice(0, 10);
+}
+
+function reserveMassiveRequest() {
+  const now = Date.now();
+  while (massiveRequestTimes.length > 0 && massiveRequestTimes[0] <= now - 60_000) {
+    massiveRequestTimes.shift();
+  }
+  if (massiveRequestTimes.length >= 5) return false;
+  massiveRequestTimes.push(now);
+  return true;
+}
+
+function parseMassiveCandles(payload) {
+  if (!payload || typeof payload !== "object" || !Array.isArray(payload.results)) return null;
+  return payload.results.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const candle = item;
+    const numbers = [candle.o, candle.h, candle.l, candle.c, candle.v, candle.t];
+    if (!numbers.every((value) => typeof value === "number" && Number.isFinite(value))) return [];
+    if (candle.o <= 0 || candle.h <= 0 || candle.l <= 0 || candle.c <= 0 || candle.v < 0 || candle.t <= 0) return [];
+    if (candle.h < candle.l || candle.h < candle.o || candle.h < candle.c || candle.l > candle.o || candle.l > candle.c) return [];
+    return [{
+      timestamp: candle.t,
+      open: candle.o,
+      high: candle.h,
+      low: candle.l,
+      close: candle.c,
+      volume: candle.v,
+    }];
+  }).sort((left, right) => left.timestamp - right.timestamp);
+}
+
+async function loadMassiveCandles(env, symbol, interval) {
+  const cacheKey = interval + ":" + symbol;
+  const cached = historyCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.promise;
+  if (!env.MASSIVE_API_KEY) {
+    throw Object.assign(new Error("The server-side Massive key is not configured."), { code: "history_not_configured", status: 503 });
+  }
+  if (!reserveMassiveRequest()) {
+    throw Object.assign(new Error("Massive Stocks Basic allows 5 API calls per minute; cached real history will be available shortly."), { code: "history_rate_limited", status: 429 });
+  }
+
+  const isIntraday = interval === "intraday";
+  const from = exchangeDateDaysAgo(isIntraday ? 4 : 366);
+  const to = exchangeDate(Date.now());
+  const multiplier = isIntraday ? 5 : 1;
+  const timespan = isIntraday ? "minute" : "day";
+  const url = new URL(
+    "https://api.massive.com/v2/aggs/ticker/" + symbol + "/range/" + multiplier + "/" + timespan + "/" + from + "/" + to,
   );
-  return allFinite &&
-    [c, h, l, o].every((values) => values.every((value) => value > 0)) &&
-    v.every((value) => value >= 0) &&
-    t.every((value) => value > 0) &&
-    h.every((value, index) => value >= l[index]);
+  url.searchParams.set("adjusted", "true");
+  url.searchParams.set("sort", "asc");
+  url.searchParams.set("limit", "50000");
+
+  const ttl = isIntraday ? 30_000 : 300_000;
+  const request = (async () => {
+    try {
+      const upstream = await fetch(url.toString(), {
+        headers: {
+          Accept: "application/json",
+          Authorization: "Bearer " + env.MASSIVE_API_KEY,
+        },
+        cf: { cacheEverything: true, cacheTtl: isIntraday ? 30 : 300 },
+      });
+      if (upstream.status === 401) {
+        throw Object.assign(new Error("Massive rejected the server-side API key."), { code: "history_auth_failed", status: 502 });
+      }
+      if (upstream.status === 403) {
+        throw Object.assign(new Error("Massive denied access to the historical aggregates endpoint for this account."), { code: "history_plan_restricted", status: 403 });
+      }
+      if (upstream.status === 429) {
+        throw Object.assign(new Error("Massive API rate limit reached. Retry after the free-plan minute window resets."), { code: "history_rate_limited", status: 429 });
+      }
+      if (!upstream.ok) {
+        throw Object.assign(new Error("Massive historical aggregates request failed (" + upstream.status + ")."), { code: "history_request_failed", status: 502 });
+      }
+
+      const payload = await upstream.json();
+      if (payload?.status === "ERROR") {
+        throw Object.assign(new Error("Massive rejected the historical aggregates request."), { code: "history_upstream_rejected", status: 502 });
+      }
+      const candles = parseMassiveCandles(payload);
+      if (!candles || candles.length < 2) {
+        throw Object.assign(new Error("Massive returned no usable historical candles for this range."), { code: "history_no_data", status: 404 });
+      }
+      return candles;
+    } catch (error) {
+      if (error && typeof error === "object" && "code" in error) throw error;
+      throw Object.assign(new Error("Massive historical prices are temporarily unavailable."), { code: "history_upstream_unavailable", status: 502 });
+    }
+  })();
+
+  historyCache.set(cacheKey, { expiresAt: Date.now() + ttl, promise: request });
+  void request.catch(() => {
+    if (historyCache.get(cacheKey)?.promise === request) historyCache.delete(cacheKey);
+  });
+  return request;
 }
 
 async function getCandles(request, env, symbol, range) {
   if (!allowedSymbols.has(symbol)) {
     return jsonResponse(request, env, { error: "Unsupported stock symbol." }, 404);
   }
-  if (!Object.hasOwn(candleRanges, range)) {
+  if (range !== "1D" && !Object.hasOwn(historyRanges, range)) {
     return jsonResponse(request, env, { error: "Unsupported history range." }, 400);
-  }
-  if (!env.FINNHUB_API_KEY) {
-    return jsonResponse(request, env, { error: "Market data is not configured." }, 503);
   }
   if (isRateLimited(request, 60)) {
     return jsonResponse(request, env, { error: "Too many requests. Please retry shortly." }, 429);
   }
 
-  const { resolution, days } = candleRanges[range];
-  const to = Math.floor(Date.now() / 1000);
-  const from = to - days * 24 * 60 * 60;
-  const url = new URL("https://finnhub.io/api/v1/stock/candle");
-  url.searchParams.set("symbol", symbol);
-  url.searchParams.set("resolution", resolution);
-  url.searchParams.set("from", String(from));
-  url.searchParams.set("to", String(to));
-  url.searchParams.set("token", env.FINNHUB_API_KEY);
-
   try {
-    const upstream = await fetch(url.toString(), { headers: { Accept: "application/json" } });
-    if (upstream.status === 403) {
-      return jsonResponse(request, env, {
-        error: "Historical prices are restricted by the configured Finnhub plan: GET /stock/candle requires Premium Access.",
-        code: "history_premium_required",
-      }, 403);
-    }
-    if (upstream.status === 401) {
-      return jsonResponse(request, env, {
-        error: "Finnhub rejected the server-side market data credential.",
-        code: "history_auth_failed",
-      }, 502);
-    }
-    if (!upstream.ok) {
-      return jsonResponse(request, env, {
-        error: "Finnhub historical candles request failed (" + upstream.status + ").",
-        code: "history_request_failed",
-      }, 502);
-    }
-
-    const payload = await upstream.json();
-    if (typeof payload?.error === "string") {
-      const upstreamMessage = payload.error.toLowerCase();
-      if (upstreamMessage.includes("access") || upstreamMessage.includes("premium") ||
-        upstreamMessage.includes("subscription") || upstreamMessage.includes("plan")) {
-        return jsonResponse(request, env, {
-          error: "Historical prices are restricted by the configured Finnhub plan: GET /stock/candle requires Premium Access.",
-          code: "history_premium_required",
-        }, 403);
-      }
-      return jsonResponse(request, env, {
-        error: "Finnhub rejected the historical candles request.",
-        code: "history_upstream_rejected",
-      }, 502);
-    }
-    if (payload?.s === "no_data") {
-      return jsonResponse(request, env, {
-        error: "Finnhub returned no historical candles for this range.",
-        code: "history_no_data",
-      }, 404);
-    }
-    if (!isCompleteCandleData(payload)) {
-      return jsonResponse(request, env, {
-        error: "Finnhub returned invalid historical candles.",
-        code: "history_invalid_response",
-      }, 502);
-    }
-
-    let candles = payload.t.map((timestamp, index) => ({
-      timestamp: timestamp * 1000,
-      open: payload.o[index],
-      high: payload.h[index],
-      low: payload.l[index],
-      close: payload.c[index],
-      volume: payload.v[index],
-    }));
-
-    if (range === "1D" && candles.length > 0) {
-      const sessionDate = new Intl.DateTimeFormat("en-US", {
-        timeZone: "America/New_York",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      }).format(new Date(candles[candles.length - 1].timestamp));
-      candles = candles.filter((candle) =>
-        new Intl.DateTimeFormat("en-US", {
-          timeZone: "America/New_York",
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-        }).format(new Date(candle.timestamp)) === sessionDate
-      );
+    let candles = await loadMassiveCandles(env, symbol, range === "1D" ? "intraday" : "daily");
+    if (range === "1D") {
+      const latestSession = exchangeDate(candles[candles.length - 1].timestamp);
+      candles = candles.filter((candle) => exchangeDate(candle.timestamp) === latestSession);
+    } else if (range !== "1Y") {
+      const cutoff = Date.now() - historyRanges[range] * 24 * 60 * 60 * 1000;
+      candles = candles.filter((candle) => candle.timestamp >= cutoff);
     }
 
     if (candles.length < 2) {
       return jsonResponse(request, env, {
-        error: "Finnhub returned no usable candles for this range.",
+        error: "Massive returned no usable historical candles for this range.",
         code: "history_no_data",
       }, 404);
     }
-
-    return jsonResponse(request, env, { symbol, range, resolution, candles });
-  } catch {
-    return jsonResponse(request, env, {
-      error: "Finnhub historical candles are temporarily unavailable.",
-      code: "history_upstream_unavailable",
-    }, 502);
+    return jsonResponse(request, env, { symbol, range, candles });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Massive historical prices are temporarily unavailable.";
+    const code = error && typeof error === "object" && "code" in error ? error.code : "history_upstream_unavailable";
+    const status = error && typeof error === "object" && "status" in error ? error.status : 502;
+    return jsonResponse(request, env, { error: message, code }, status);
   }
 }
 

@@ -58,13 +58,15 @@ export function MarketHistoryStatusMessage({
   failedSymbols: string[];
   error: string | null;
 }) {
-  if (status === "idle" || status === "ready") return null;
+  if (status === "idle") return null;
 
   const message = status === "loading"
-    ? "Loading real one month price history for charts."
-    : "Historical price charts unavailable" +
-      (failedSymbols.length ? " for " + failedSymbols.join(", ") : "") +
-      (error ? ": " + error : ".");
+    ? "Loading real one month Massive price history for charts."
+    : status === "ready"
+      ? "Massive Basic end-of-day history; current quotes come from Finnhub."
+      : "Massive historical price charts unavailable" +
+        (failedSymbols.length ? " for " + failedSymbols.join(", ") : "") +
+        (error ? ": " + error : ".");
 
   return (
     <div className={"market-history-status market-history-status-" + status} role="status" aria-live="polite">

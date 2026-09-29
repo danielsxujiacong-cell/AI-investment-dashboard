@@ -14,7 +14,7 @@ GitHub Pages 保留为静态前端部署目标。
 
 ## STEP 2.5：线上真实行情 API
 
-Cloudflare Worker API Proxy 与 GitHub Pages 前端均已部署；五只股票的公网行情 API、关注列表和股票详情页已验证。Finnhub Key 仅由 Worker 服务端读取。Overview、Watchlist 和详情页使用实时行情并保留 Mock 回退。
+Cloudflare Worker API Proxy 与 GitHub Pages 前端均已部署；Finnhub 继续提供当前报价，Massive 通过 Worker 提供历史 OHLC。两把 Key 仅由 Worker 服务端读取。Overview、Watchlist 和详情页保留 Finnhub 报价 Mock 回退，历史图表只用真实 Massive 数据。
 
 ## V3 及主题模式
 

@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-**V4 Personal Investment System 已完成。** Portfolio 支持管理个人持仓，并用当前报价计算市值、成本和未实现盈亏；股票详情可保存个人投资逻辑，Portfolio 可记录投资日志。AI Assistant 仍使用 Mock AI，可读取本机保存的持仓、投资记忆和现有 Watchlist。个人数据保存在当前设备的 localStorage，不会跨设备同步。Finnhub Key 由 Cloudflare Worker 服务端读取。报价失败时保留 Mock Data；历史图表只显示真实 Finnhub candles，失败时显示错误，不绘制 Mock 曲线。当前 Worker 密钥访问 /stock/candle 返回 403（Premium Access Required），因此升级到支持 Stock Candles 的 Finnhub 套餐前，历史图表会显示不可用。
+**V4 Personal Investment System 已完成。** Portfolio 支持管理个人持仓，并用 Finnhub 当前报价计算市值、成本和未实现盈亏；股票详情可保存个人投资逻辑，Portfolio 可记录投资日志。AI Assistant 仍使用 Mock AI，可读取本机保存的持仓、投资记忆和现有 Watchlist。个人数据保存在当前设备的 localStorage，不会跨设备同步。Finnhub 负责当前报价，Massive 负责历史 OHLC；两个 Key 只由 Cloudflare Worker 服务端读取。Overview、Watchlist 和 Portfolio 使用真实历史收盘价，股票详情显示真实 K 线。免费 Stocks Basic 的历史聚合为 end-of-day 数据，可能比 Finnhub 当前报价晚一个或多个交易时段；页面分别标示数据来源。Key 不存在或历史接口失败时显示明确状态，不绘制 Mock 曲线。
 
 ## 开发阶段
 
@@ -30,7 +30,7 @@
 
 - Dashboard 首页用本地持仓数量与真实历史收盘价计算一个月持仓价值趋势；没有持仓或历史接口不可用时显示空态
 - NVDA、AAPL、TSLA、MSFT、AMZN 的实时行情、关注列表和股票详情；报价保留 Mock Data 回退
-- Overview / Watchlist 的真实一个月 mini chart；详情页提供 1D / 1W / 1M / 3M / 1Y 历史区间（由 Finnhub 套餐决定是否可用）
+- Overview / Watchlist 的真实一个月 mini chart；详情页提供 Massive 真实 OHLC K 线和 1D / 1W / 1M / 3M / 1Y 周期
 - 行情 Loading、失败状态和 Last updated 时间；历史 API 失败时明确显示错误，不伪造价格曲线
 - Light / Dark Mode，首次跟随系统主题并保存用户选择
 - Portfolio 新增、编辑和删除个人持仓；按 Finnhub 当前价格计算市值、成本和未实现盈亏
@@ -42,7 +42,7 @@
 
 ## 本地运行
 
-需要 Node.js 20.9 或更高版本，并在 `.env.local` 中配置 `FINNHUB_API_KEY`。
+需要 Node.js 20.9 或更高版本。将 `MASSIVE_API_KEY` 写入项目本地 `.env.local`；如需本地实时报价，再加入 `FINNHUB_API_KEY`。`.env.local` 已由 `.gitignore` 排除。Massive Key 仅由本地 Worker 与部署后的 Cloudflare Worker读取，不进入前端。
 
 ```bash
 npm install
@@ -55,7 +55,7 @@ node scripts/start-api-proxy.mjs
 node node_modules/next/dist/bin/next dev
 ```
 
-然后访问 http://localhost:3000。Finnhub 报价失败时会显示 Mock Data 回退；历史 candles 失败时不会画模拟曲线，而会显示 API 错误。
+然后访问 http://localhost:3000。Finnhub 报价失败时会显示 Mock Data 回退；Massive 历史 candles 失败时不会画模拟曲线，而会显示 API 错误。
 
 ## 行情代理部署
 
@@ -65,7 +65,7 @@ node node_modules/next/dist/bin/next dev
 node node_modules/wrangler/bin/wrangler.js deploy --config api-proxy/wrangler.jsonc --secrets-file api-proxy/.dev.vars
 ```
 
-该本地忽略文件只含 Finnhub Key，用于将 Key 安全上传为 Worker Secret。把 Wrangler 返回的 Worker URL 设置为 GitHub 仓库变量 `MARKET_API_BASE_URL`，然后推送 `main` 触发 Pages 更新。
+部署时将 `FINNHUB_API_KEY` 和 `MASSIVE_API_KEY` 分别作为 Worker Secrets 配置；部署命令和 `.dev.vars` 均保持在本机，不要把 API Key 写入仓库或 GitHub Pages。把 Worker URL 设置为 GitHub 仓库变量 `MARKET_API_BASE_URL`，然后推送 `main` 触发 Pages 更新。
 
 ## 后续计划
 

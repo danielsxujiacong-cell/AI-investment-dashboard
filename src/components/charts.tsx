@@ -1,3 +1,5 @@
+import type { HistoricalPricePoint } from "@/data/market-history";
+
 type ChartProps = {
   data: number[];
   className?: string;
@@ -80,6 +82,58 @@ export function PerformanceChart({
         <path d={areaPath} fill="url(#portfolioFill)" />
         <path d={linePath} fill="none" stroke="var(--chart-line)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
         <circle cx={last.x} cy={last.y} r="4" fill="var(--chart-line)" className="chart-marker" />
+      </svg>
+    </div>
+  );
+}
+
+export function CandlestickChart({
+  data,
+  label = "Historical OHLC stock candles",
+}: {
+  data: HistoricalPricePoint[];
+  label?: string;
+}) {
+  if (data.length < 2) {
+    return <div className="chart-empty" role="status">Historical price data is unavailable.</div>;
+  }
+
+  const width = 760;
+  const height = 208;
+  const inset = 8;
+  const min = Math.min(...data.map((candle) => candle.low));
+  const max = Math.max(...data.map((candle) => candle.high));
+  const range = max - min || 1;
+  const innerWidth = width - inset * 2;
+  const innerHeight = height - inset * 2;
+  const step = innerWidth / data.length;
+  const y = (price: number) => height - inset - ((price - min) / range) * innerHeight;
+  const candleWidth = Math.max(1, Math.min(9, step * 0.64));
+
+  return (
+    <div className="candlestick-chart">
+      <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label={label}>
+        <g className="chart-grid">
+          <line x1="0" y1="20" x2={width} y2="20" />
+          <line x1="0" y1="76" x2={width} y2="76" />
+          <line x1="0" y1="132" x2={width} y2="132" />
+          <line x1="0" y1="188" x2={width} y2="188" />
+        </g>
+        {data.map((candle, index) => {
+          const x = inset + (index + 0.5) * step;
+          const openY = y(candle.open);
+          const closeY = y(candle.close);
+          const bodyTop = Math.min(openY, closeY);
+          const bodyHeight = Math.max(1, Math.abs(closeY - openY));
+          const direction = candle.close >= candle.open ? "up" : "down";
+          return (
+            <g key={candle.timestamp} className={`candle candle-${direction}`}>
+              <title>{`${new Date(candle.timestamp).toLocaleDateString()} O ${candle.open.toFixed(2)} H ${candle.high.toFixed(2)} L ${candle.low.toFixed(2)} C ${candle.close.toFixed(2)}`}</title>
+              <line x1={x} x2={x} y1={y(candle.high)} y2={y(candle.low)} />
+              <rect x={x - candleWidth / 2} y={bodyTop} width={candleWidth} height={bodyHeight} rx="0.7" />
+            </g>
+          );
+        })}
       </svg>
     </div>
   );

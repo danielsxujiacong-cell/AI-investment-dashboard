@@ -17,3 +17,8 @@
 
 - Added a Cloudflare Worker API proxy for Finnhub quotes while keeping the Finnhub key server-side.
 - Verified the GitHub Pages deployment and all five public Finnhub quote endpoints. The existing Mock AI assistant remains; STEP 3 is deferred until OPENAI_API_KEY is configured.
+## 2026-09-29
+
+- Keep Finnhub current quotes and move historical OHLC, overview/watchlist mini charts, portfolio performance, and stock-detail candles to Massive through the server-side Worker.
+- Keep Massive API credentials in ignored `.env.local` and Worker Secrets; never expose them to GitHub Pages.
+- Show Massive Basic end-of-day recency separately from Finnhub current quotes, and remove empty Investment Memory records when cleared.

@@ -76,9 +76,15 @@ export function PersonalDataProvider({ children }: { children: ReactNode }) {
   }, [persist]);
 
   const saveInvestmentMemory = useCallback((symbol: string, memory: InvestmentMemory) => {
+    const investmentMemory = { ...dataRef.current.investmentMemory };
+    if (Object.values(memory).every((value) => value.trim().length === 0)) {
+      delete investmentMemory[symbol];
+    } else {
+      investmentMemory[symbol] = memory;
+    }
     persist({
       ...dataRef.current,
-      investmentMemory: { ...dataRef.current.investmentMemory, [symbol]: memory },
+      investmentMemory,
     });
   }, [persist]);
 
