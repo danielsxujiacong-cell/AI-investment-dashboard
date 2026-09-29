@@ -47,3 +47,28 @@ export function MarketDataStatusMessage({
     </div>
   );
 }
+
+
+export function MarketHistoryStatusMessage({
+  status,
+  failedSymbols,
+  error,
+}: {
+  status: "idle" | "loading" | "ready" | "partial" | "error";
+  failedSymbols: string[];
+  error: string | null;
+}) {
+  if (status === "idle" || status === "ready") return null;
+
+  const message = status === "loading"
+    ? "Loading real one month price history for charts."
+    : "Historical price charts unavailable" +
+      (failedSymbols.length ? " for " + failedSymbols.join(", ") : "") +
+      (error ? ": " + error : ".");
+
+  return (
+    <div className={"market-history-status market-history-status-" + status} role="status" aria-live="polite">
+      <span>{message}</span>
+    </div>
+  );
+}

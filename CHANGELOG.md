@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-09-29
+
+- Replaced the Overview / Watchlist mini curves and stock-detail history with real Finnhub candle requests through the Cloudflare Worker. Added 1D, 1W, 1M, 3M, and 1Y range controls; chart colors follow the returned price series, and failures never draw mock history.
+- The Overview portfolio trend now derives from locally saved share counts and historical closes. The configured Finnhub credential returns HTTP 403 for GET /stock/candle (Premium Access Required), so chart panels show the exact unavailable state until the account plan is enabled.
+
 ## 2026-09-28
 
 - Added V4 Personal Investment System: editable personal holdings with quote-based value, cost basis, and unrealized gain/loss; per-stock Investment Memory; and editable Investment Notes.

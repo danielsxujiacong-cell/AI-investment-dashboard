@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { MarketDataStatusMessage } from "@/components/market-data-status";
+import { MarketDataStatusMessage, MarketHistoryStatusMessage } from "@/components/market-data-status";
 import { Icon } from "@/components/icons";
 import { SectionHeading, StockRow } from "@/components/stock-row";
 import { useStockMarketData } from "@/hooks/use-stock-market-data";
 
 export function OverviewWatchlist() {
-  const marketData = useStockMarketData();
+  const marketData = useStockMarketData(true);
 
   return (
     <section className="card watchlist-card">
@@ -19,8 +19,9 @@ export function OverviewWatchlist() {
         </span>
       </div>
       <div className="watchlist-rows">
-        {marketData.stocks.map((stock) => <StockRow key={stock.symbol} stock={stock} />)}
+        {marketData.stocks.map((stock) => <StockRow key={stock.symbol} stock={stock} history={marketData.history[stock.symbol]} />)}
       </div>
+      <MarketHistoryStatusMessage status={marketData.historyStatus} failedSymbols={marketData.failedHistorySymbols} error={marketData.historyError} />
       <MarketDataStatusMessage
         status={marketData.status}
         failedSymbols={marketData.failedSymbols}

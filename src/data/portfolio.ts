@@ -13,7 +13,6 @@ export const portfolio = {
   totalReturn: 16512.4,
   totalReturnPercent: 14.76,
   periodLabel: "1 month",
-  history: [112, 116, 114, 121, 119, 123, 120, 128, 126, 132, 130, 137, 134, 143, 148, 146, 154, 151, 160, 158, 166, 164, 170, 176],
 };
 
 export const allocations: Allocation[] = [

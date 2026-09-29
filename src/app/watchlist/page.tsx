@@ -15,7 +15,7 @@ export default function WatchlistPage() {
         <div className="watchlist-page-badge"><span className="live-dot" /> 5 symbols <span className="badge-separator">/</span> Finnhub with Mock fallback</div>
       </div>
       <WatchlistExplorer />
-      <div className="watchlist-page-footnote"><span>↗</span> Finnhub quotes are used when available; existing Mock Data remains the fallback.</div>
+      <div className="watchlist-page-footnote"><span>↗</span> Mini charts use real Finnhub history when available; quotes retain the Mock Data fallback.</div>
     </div>
   );
 }

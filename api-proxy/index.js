@@ -73,6 +73,144 @@ function isCompleteQuote(quote) {
   );
 }
 
+const candleRanges = {
+  "1D": { resolution: "5", days: 2 },
+  "1W": { resolution: "60", days: 8 },
+  "1M": { resolution: "D", days: 32 },
+  "3M": { resolution: "D", days: 93 },
+  "1Y": { resolution: "D", days: 366 },
+};
+
+function isCompleteCandleData(payload) {
+  if (!payload || typeof payload !== "object" || payload.s !== "ok") return false;
+  const { c, h, l, o, t, v } = payload;
+  if (![c, h, l, o, t, v].every(Array.isArray) || c.length < 2) return false;
+  if (![h, l, o, t, v].every((values) => values.length === c.length)) return false;
+  const allFinite = [c, h, l, o, t, v].every((values) =>
+    values.every((value) => typeof value === "number" && Number.isFinite(value))
+  );
+  return allFinite &&
+    [c, h, l, o].every((values) => values.every((value) => value > 0)) &&
+    v.every((value) => value >= 0) &&
+    t.every((value) => value > 0) &&
+    h.every((value, index) => value >= l[index]);
+}
+
+async function getCandles(request, env, symbol, range) {
+  if (!allowedSymbols.has(symbol)) {
+    return jsonResponse(request, env, { error: "Unsupported stock symbol." }, 404);
+  }
+  if (!Object.hasOwn(candleRanges, range)) {
+    return jsonResponse(request, env, { error: "Unsupported history range." }, 400);
+  }
+  if (!env.FINNHUB_API_KEY) {
+    return jsonResponse(request, env, { error: "Market data is not configured." }, 503);
+  }
+  if (isRateLimited(request, 60)) {
+    return jsonResponse(request, env, { error: "Too many requests. Please retry shortly." }, 429);
+  }
+
+  const { resolution, days } = candleRanges[range];
+  const to = Math.floor(Date.now() / 1000);
+  const from = to - days * 24 * 60 * 60;
+  const url = new URL("https://finnhub.io/api/v1/stock/candle");
+  url.searchParams.set("symbol", symbol);
+  url.searchParams.set("resolution", resolution);
+  url.searchParams.set("from", String(from));
+  url.searchParams.set("to", String(to));
+  url.searchParams.set("token", env.FINNHUB_API_KEY);
+
+  try {
+    const upstream = await fetch(url.toString(), { headers: { Accept: "application/json" } });
+    if (upstream.status === 403) {
+      return jsonResponse(request, env, {
+        error: "Historical prices are restricted by the configured Finnhub plan: GET /stock/candle requires Premium Access.",
+        code: "history_premium_required",
+      }, 403);
+    }
+    if (upstream.status === 401) {
+      return jsonResponse(request, env, {
+        error: "Finnhub rejected the server-side market data credential.",
+        code: "history_auth_failed",
+      }, 502);
+    }
+    if (!upstream.ok) {
+      return jsonResponse(request, env, {
+        error: "Finnhub historical candles request failed (" + upstream.status + ").",
+        code: "history_request_failed",
+      }, 502);
+    }
+
+    const payload = await upstream.json();
+    if (typeof payload?.error === "string") {
+      const upstreamMessage = payload.error.toLowerCase();
+      if (upstreamMessage.includes("access") || upstreamMessage.includes("premium") ||
+        upstreamMessage.includes("subscription") || upstreamMessage.includes("plan")) {
+        return jsonResponse(request, env, {
+          error: "Historical prices are restricted by the configured Finnhub plan: GET /stock/candle requires Premium Access.",
+          code: "history_premium_required",
+        }, 403);
+      }
+      return jsonResponse(request, env, {
+        error: "Finnhub rejected the historical candles request.",
+        code: "history_upstream_rejected",
+      }, 502);
+    }
+    if (payload?.s === "no_data") {
+      return jsonResponse(request, env, {
+        error: "Finnhub returned no historical candles for this range.",
+        code: "history_no_data",
+      }, 404);
+    }
+    if (!isCompleteCandleData(payload)) {
+      return jsonResponse(request, env, {
+        error: "Finnhub returned invalid historical candles.",
+        code: "history_invalid_response",
+      }, 502);
+    }
+
+    let candles = payload.t.map((timestamp, index) => ({
+      timestamp: timestamp * 1000,
+      open: payload.o[index],
+      high: payload.h[index],
+      low: payload.l[index],
+      close: payload.c[index],
+      volume: payload.v[index],
+    }));
+
+    if (range === "1D" && candles.length > 0) {
+      const sessionDate = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date(candles[candles.length - 1].timestamp));
+      candles = candles.filter((candle) =>
+        new Intl.DateTimeFormat("en-US", {
+          timeZone: "America/New_York",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).format(new Date(candle.timestamp)) === sessionDate
+      );
+    }
+
+    if (candles.length < 2) {
+      return jsonResponse(request, env, {
+        error: "Finnhub returned no usable candles for this range.",
+        code: "history_no_data",
+      }, 404);
+    }
+
+    return jsonResponse(request, env, { symbol, range, resolution, candles });
+  } catch {
+    return jsonResponse(request, env, {
+      error: "Finnhub historical candles are temporarily unavailable.",
+      code: "history_upstream_unavailable",
+    }, 502);
+  }
+}
+
 async function getQuote(request, env, symbol) {
   if (!allowedSymbols.has(symbol)) {
     return jsonResponse(request, env, { error: "Unsupported stock symbol." }, 404);
@@ -119,6 +257,11 @@ export default {
     }
 
     const url = new URL(request.url);
+    const candlesMatch = url.pathname.match(/^\/api\/market\/candles\/([A-Za-z]+)$/);
+    if (request.method === "GET" && candlesMatch) {
+      return getCandles(request, env, candlesMatch[1].toUpperCase(), url.searchParams.get("range") || "");
+    }
+
     const quoteMatch = url.pathname.match(/^\/api\/market\/quote\/([A-Za-z]+)$/);
     if (request.method === "GET" && quoteMatch) {
       return getQuote(request, env, quoteMatch[1].toUpperCase());

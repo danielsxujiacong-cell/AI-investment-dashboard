@@ -115,6 +115,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .overview-chart-wrap { margin-top: 17px; }
 .performance-chart { width: 100%; height: 178px; }
 .performance-chart svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.performance-chart.chart-negative { --chart-line: #c47f7f; --chart-fill: #c47f7f; }
+.chart-empty { display: flex; align-items: center; justify-content: center; min-height: 178px; padding: 14px; color: var(--muted); font-size: 11px; text-align: center; }
+.chart-error { color: #d29a91; overflow-wrap: anywhere; }
 .chart-grid line { stroke: rgba(218,225,232,.065); stroke-width: 1; stroke-dasharray: 2 5; vector-effect: non-scaling-stroke; }
 .chart-marker { stroke: #151b18; stroke-width: 3px; }
 .chart-x-axis { display: flex; justify-content: space-between; padding: 7px 2px 0; color: #737a84; font-size: 8px; font-weight: 600; letter-spacing: .08em; }
@@ -160,6 +163,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .stock-name-wrap>span { overflow: hidden; color: #777e88; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 .stock-spark { display: flex; align-items: center; }
 .sparkline { width: 82px; height: 29px; overflow: visible; }
+.sparkline-placeholder { display: block; width: 82px; height: 29px; border-bottom: 1px dashed var(--line); }
+.sparkline-unavailable { display: inline-flex; width: 82px; height: 29px; align-items: center; justify-content: center; color: var(--muted); font-size: 12px; }
 .stock-spark.positive { color: #83b895; }
 .stock-spark.negative { color: #bf8282; }
 .stock-price { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
@@ -233,6 +238,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .market-data-status-live .live-dot { background: #8fbd9c; box-shadow: 0 0 8px rgba(143,189,156,.28); }
 .market-data-status-loading .live-dot { background: #c5ad77; animation: market-data-pulse 1.2s ease-in-out infinite; }
 .market-data-status-partial,.market-data-status-mock { color: #c8a393; }
+.market-history-status { margin-top: 8px; color: var(--muted); font-size: 9px; line-height: 1.55; overflow-wrap: anywhere; }
+.market-history-status-loading { color: var(--muted); }
+.market-history-status-partial,.market-history-status-error { color: #c8a393; }
+.market-history-status-ready { color: var(--muted); }
 .market-data-status-partial .live-dot,.market-data-status-mock .live-dot { background: #c18f7a; }
 .market-data-status-detail { max-width: 280px; justify-content: flex-end; text-align: right; }
 @keyframes market-data-pulse { 50% { opacity: .35; } }
@@ -358,9 +367,11 @@ a.holding-row:hover { background: rgba(255,255,255,.025); }
 .stock-chart-value>span:first-child { color: #dce3df; font-size: 22px; font-weight: 540; letter-spacing: -.04em; }
 .stock-chart-value>span:last-child { font-size: 9px; font-weight: 620; }
 .stock-chart-card .performance-chart { height: 205px; margin-top: 12px; }
+.stock-chart-card .chart-empty { min-height: 205px; margin-top: 12px; border: 1px dashed var(--line); border-radius: 7px; }
 .chart-range-group { display: flex; align-items: center; gap: 3px; padding: 3px; border: 1px solid var(--line); border-radius: 7px; background: rgba(8,10,13,.32); }
-.chart-range-group span { min-width: 29px; padding: 5px 6px; border-radius: 5px; color: #707781; font-size: 8px; text-align: center; }
-.chart-range-group .selected { color: #c4d7c8; background: rgba(133,166,141,.14); }
+.chart-range-group button { min-width: 29px; padding: 5px 6px; border: 0; border-radius: 5px; color: #707781; background: transparent; font: inherit; font-size: 8px; text-align: center; cursor: pointer; }
+.chart-range-group button:hover { color: var(--text); }
+.chart-range-group button.selected { color: #c4d7c8; background: rgba(133,166,141,.14); }
 .stock-metric-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; }
 .stock-metric-card { display: flex; min-height: 104px; flex-direction: column; justify-content: center; gap: 8px; padding: 15px 17px; }
 .stock-metric-card strong { color: #e1e6e3; font-size: 18px; font-weight: 550; letter-spacing: -.035em; }
@@ -445,7 +456,7 @@ a.holding-row:hover { background: rgba(255,255,255,.025); }
   .watchlist-live { padding: 4px 5px; font-size: 6px; }
   .stock-row { min-height: 54px; grid-template-columns: minmax(0,1fr) 43px 68px 14px; gap: 6px; }
   .stock-spark { display: flex; grid-column: 2; }
-  .stock-spark .sparkline { width: 42px; height: 24px; }
+  .stock-spark .sparkline, .stock-spark .sparkline-placeholder, .stock-spark .sparkline-unavailable { width: 42px; height: 24px; }
   .stock-row .stock-price { grid-column: 3; grid-row: 1; }
   .stock-row-chevron { grid-column: 4; grid-row: 1; }
   .stock-monogram { width: 29px; height: 29px; }
@@ -510,7 +521,7 @@ a.holding-row:hover { background: rgba(255,255,255,.025); }
   .stock-detail-price strong { font-size: 26px; }
   .stock-chart-card { padding: 17px 13px 13px; }
   .stock-chart-card .performance-chart { height: 157px; }
-  .chart-range-group span { min-width: 23px; padding: 5px 4px; font-size: 7px; }
+  .chart-range-group button { min-width: 23px; padding: 5px 4px; font-size: 7px; }
   .stock-metric-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
   .stock-metric-card { min-height: 91px; padding: 13px; }
   .stock-metric-card strong { font-size: 16px; }
@@ -572,12 +583,15 @@ html[data-theme="light"] .prompt-chip { border-color: var(--line); background: r
 html[data-theme="light"] .message-bubble { border-color: var(--line); background: #f4f6f4; }
 html[data-theme="light"] .message-row.user .message-bubble { border-color: rgba(61, 119, 77, .16); background: #e9f2eb; }
 html[data-theme="light"] .chart-range-group { background: rgba(238, 242, 238, .82); }
+html[data-theme="light"] .chart-range-group button.selected { color: #335b3f; background: rgba(91, 143, 103, .14); }
+html[data-theme="light"] .performance-chart.chart-negative { --chart-line: #b45151; --chart-fill: #b45151; }
+html[data-theme="light"] .market-history-status-partial, html[data-theme="light"] .market-history-status-error, html[data-theme="light"] .chart-error { color: #98604d; }
 html[data-theme="light"] .donut-center { border-color: rgba(34,48,39,.09); background: #fbfcfb; }
 html[data-theme="light"] .ai-insight-card { background: radial-gradient(ellipse 50% 120% at 0 50%, rgba(101,145,110,.1), transparent 80%), linear-gradient(140deg, #f8fbf8, #fff); }
 html[data-theme="light"] .mobile-nav { border-color: rgba(35,48,39,.12); background: rgba(250, 252, 250, .94); box-shadow: 0 12px 36px rgba(31,48,37,.13), inset 0 1px rgba(255,255,255,.9); }
 
 html[data-theme="light"] :is(.brand-name, .workspace-copy strong, .profile-copy strong, .market-pulse strong, .breadcrumb strong, .page-heading h1, .portfolio-value, .section-heading h2, .panel-heading h2, .overview-bottom, .health-score strong, .brief-title-row h2, .brief-overview p, .brief-points strong, .brief-expanded h3, .dashboard-bottom-line strong, .stock-name-wrap strong, .stock-price strong, .portfolio-stat-card strong, .donut-center strong, .holding-company strong, .holding-value strong, .assistant-intro h2, .conversation-header strong, .message-bubble p, .message-row.user .message-bubble p, .chat-composer input, .stock-symbol-line h1, .stock-detail-price strong, .stock-chart-value>span:first-child, .stock-metric-card strong, .ai-insight-content p) { color: #202723; }
-html[data-theme="light"] :is(.workspace-copy span, .profile-copy span, .workspace-chevron, .sidebar-section-label, .nav-item, .breadcrumb, .breadcrumb b, .eyebrow, .page-heading p, .overview-date, .portfolio-value span, .change-period, .chart-x-axis, .overview-bottom, .aside-topline, .health-score span, .overview-aside p, .stock-name-wrap>span, .brief-date, .brief-title-row .eyebrow, .brief-points p, .brief-expanded p, .brief-disclaimer, .dashboard-bottom-line span, .watchlist-page-badge, .watchlist-count, .watchlist-table-head, .watchlist-note, .market-data-status, .empty-search, .empty-search span, .watchlist-page-footnote, .stat-foot, .period-chip, .holdings-count, .donut-center span, .allocation-legend-row, .allocation-caption, .holding-company span, .holding-weight, .holding-cash-tag, .holdings-note, .portfolio-insight p, .assistant-intro p, .prompt-chip, .conversation-header span, .message-bubble p, .composer-hint, .assistant-disclaimer, .back-link, .stock-detail-identity p, .sector-chip, .chart-range-group span, .stock-metric-card>span:last-child, .ai-insight-disclaimer, .stock-about p) { color: #68736c; }
+html[data-theme="light"] :is(.workspace-copy span, .profile-copy span, .workspace-chevron, .sidebar-section-label, .nav-item, .breadcrumb, .breadcrumb b, .eyebrow, .page-heading p, .overview-date, .portfolio-value span, .change-period, .chart-x-axis, .overview-bottom, .aside-topline, .health-score span, .overview-aside p, .stock-name-wrap>span, .brief-date, .brief-title-row .eyebrow, .brief-points p, .brief-expanded p, .brief-disclaimer, .dashboard-bottom-line span, .watchlist-page-badge, .watchlist-count, .watchlist-table-head, .watchlist-note, .market-data-status, .empty-search, .empty-search span, .watchlist-page-footnote, .stat-foot, .period-chip, .holdings-count, .donut-center span, .allocation-legend-row, .allocation-caption, .holding-company span, .holding-weight, .holding-cash-tag, .holdings-note, .portfolio-insight p, .assistant-intro p, .prompt-chip, .conversation-header span, .message-bubble p, .composer-hint, .assistant-disclaimer, .back-link, .stock-detail-identity p, .sector-chip, .chart-range-group button, .stock-metric-card>span:last-child, .ai-insight-disclaimer, .stock-about p) { color: #68736c; }
 html[data-theme="light"] .market-status { color: #496953; }
 html[data-theme="light"] .market-status small { border-color: rgba(56,111,70,.16); color: #557b5d; }
 html[data-theme="light"] .nav-item:hover { color: #263b2b; background: rgba(55, 103, 65, .055); }
@@ -602,6 +616,7 @@ html[data-theme="light"] .stock-price .positive-text, html[data-theme="light"] .
 html[data-theme="light"] .stock-price .negative-text, html[data-theme="light"] .negative-text { color: var(--red) !important; }
 html[data-theme="light"] .stock-spark.positive { color: #398256; }
 html[data-theme="light"] .stock-spark.negative { color: #b45151; }
+html[data-theme="light"] .chart-range-group button { color: #68736c; }
 html[data-theme="light"] .watchlist-live, html[data-theme="light"] .market-data-status-live { color: #347447; }
 html[data-theme="light"] .market-data-status-partial, html[data-theme="light"] .market-data-status-mock { color: #98604d; }
 html[data-theme="light"] .overview-live-status.market-state-partial, html[data-theme="light"] .overview-live-status.market-state-mock { border-color: rgba(152,96,77,.16); color: #98604d; }

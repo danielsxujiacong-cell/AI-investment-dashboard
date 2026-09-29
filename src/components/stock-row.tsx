@@ -1,11 +1,14 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { Stock } from "@/data/stocks";
+import type { MiniHistoryState } from "@/hooks/use-stock-market-data";
 import { Icon } from "@/components/icons";
 import { Sparkline } from "@/components/charts";
 
-export function StockRow({ stock }: { stock: Stock }) {
-  const positive = stock.changePercent >= 0;
+export function StockRow({ stock, history }: { stock: Stock; history?: MiniHistoryState }) {
+  const chartPositive = history?.points.length
+    ? history.points[history.points.length - 1].close >= history.points[0].close
+    : null;
 
   return (
     <Link href={"/stocks/" + stock.symbol} className="stock-row">
@@ -16,19 +19,32 @@ export function StockRow({ stock }: { stock: Stock }) {
           <span>{stock.name}</span>
         </span>
       </div>
-      <div className={"stock-spark " + (positive ? "positive" : "negative")}>
-        <Sparkline data={stock.sparkline} />
+      <div className={"stock-spark " + (chartPositive === null ? "" : chartPositive ? "positive" : "negative")}>
+        {history?.status === "loading" ? (
+          <span className="sparkline-placeholder" role="status" aria-label="Loading historical prices" />
+        ) : history?.status === "ready" ? (
+          <Sparkline
+            data={history.points.map((point) => point.close)}
+            label={stock.symbol + " one month historical price"}
+            isPositive={chartPositive ?? undefined}
+          />
+        ) : (
+          <span className="sparkline-unavailable" title={history?.error ?? "Historical prices unavailable"} aria-label="Historical prices unavailable">—</span>
+        )}
       </div>
       <div className="stock-price">
         <strong>{"$" + stock.price.toFixed(2)}</strong>
         <span
-          className={positive ? "positive-text" : "negative-text"}
-          title={`${positive ? "+" : ""}${stock.change.toFixed(2)} (${positive ? "+" : ""}${stock.changePercent.toFixed(2)}%) today`}
+          className={stock.changePercent >= 0 ? "positive-text" : "negative-text"}
+          title={
+            (stock.changePercent >= 0 ? "+" : "") + stock.change.toFixed(2) +
+            " (" + (stock.changePercent >= 0 ? "+" : "") + stock.changePercent.toFixed(2) + "%) today"
+          }
         >
-          {positive ? "+" : ""}{stock.changePercent.toFixed(2)}%
+          {stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(2)}%
         </span>
-        <small className={positive ? "positive-text" : "negative-text"}>
-          {positive ? "+$" : "-$"}{Math.abs(stock.change).toFixed(2)}
+        <small className={stock.change >= 0 ? "positive-text" : "negative-text"}>
+          {stock.change >= 0 ? "+$" : "-$"}{Math.abs(stock.change).toFixed(2)}
         </small>
       </div>
       <span className="stock-row-chevron"><Icon name="chevron-right" size={16} /></span>

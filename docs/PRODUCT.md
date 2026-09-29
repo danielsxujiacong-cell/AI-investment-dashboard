@@ -23,11 +23,11 @@ AI Investment Dashboard，一个个人 AI 投资研究控制台
 
 ## 当前 V4 功能
 
-- Overview、Watchlist 和股票详情通过 Cloudflare Worker 获取 Finnhub 行情，请求失败时回退到 Mock Data。
+- Overview、Watchlist 和股票详情通过 Cloudflare Worker 获取 Finnhub 实时报价，失败时回退到 Mock Data。走势图通过 Worker 请求 Finnhub 历史 candles，失败时显示错误且不绘制模拟曲线。
 - Portfolio 可新增、编辑、删除个人持仓，并按当前报价计算市值、成本和未实现盈亏。
 - 股票详情中的 My Investment Memory 保存关注理由、买入逻辑、风险、退出条件和个人备注。
 - Investment Notes 支持新增、编辑、删除，并按日期和更新时间排序。
 - AI Assistant 继续使用 Mock AI；Personal Context 显示持仓、投资记忆和 Watchlist，并可在模拟回复中引用这些信息。
 - 持仓、投资记忆和日志写入当前设备的 localStorage，不登录、不跨设备同步，也不发送给外部 AI 服务。
 
-每日市场简报、图表和部分基本面仍使用产品 Mock Data；Finnhub 报价请求失败时保留 Mock fallback。
+每日市场简报、部分基本面和 AI 回复仍使用产品 Mock Data。Overview / Watchlist mini chart 使用真实一个月收盘价；股票详情支持 1D、1W、1M、3M、1Y。图表接口为 Finnhub GET /stock/candle，需要 Premium Access；当前配置密钥返回 403，因此启用相应套餐前图表显示不可用。Finnhub 报价仍保留 Mock fallback。

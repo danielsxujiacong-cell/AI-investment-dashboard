@@ -1,17 +1,35 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import { PerformanceChart } from "@/components/charts";
 import { Icon } from "@/components/icons";
 import { MarketDataStatusMessage } from "@/components/market-data-status";
 import { InvestmentMemoryEditor } from "@/components/investment-memory-editor";
+import { useMarketHistory } from "@/hooks/use-market-history";
 import { useStockMarketData } from "@/hooks/use-stock-market-data";
+import { formatHistoryTimestamp, marketHistoryRanges, type MarketHistoryRange } from "@/data/market-history";
 import type { Stock } from "@/data/stocks";
 
 export function StockDetailClient({ initialStock }: { initialStock: Stock }) {
   const marketData = useStockMarketData();
   const stock = marketData.stocks.find((item) => item.symbol === initialStock.symbol) ?? initialStock;
-  const positive = stock.changePercent >= 0;
+  const [range, setRange] = useState<MarketHistoryRange>("1M");
+  const historical = useMarketHistory(stock.symbol, range);
+  const points = historical.points;
+  const firstClose = points[0]?.close;
+  const lastClose = points[points.length - 1]?.close;
+  const rangeChange = firstClose !== undefined && lastClose !== undefined ? lastClose - firstClose : null;
+  const rangePercent = rangeChange !== null && firstClose ? (rangeChange / firstClose) * 100 : null;
+  const chartPositive = rangeChange === null ? undefined : rangeChange >= 0;
+  const axisLabels = useMemo(() => {
+    if (points.length < 2) return [];
+    const indices = [...new Set([0, 0.25, 0.5, 0.75, 1].map((fraction) =>
+      Math.round((points.length - 1) * fraction),
+    ))];
+    return indices.map((index) => formatHistoryTimestamp(points[index].timestamp, range));
+  }, [points, range]);
+  const quotePositive = stock.changePercent >= 0;
 
   return (
     <div className="page-stack page-enter stock-detail-page">
@@ -24,7 +42,7 @@ export function StockDetailClient({ initialStock }: { initialStock: Stock }) {
         </div>
         <div className="stock-detail-price">
           <strong>{"$" + stock.price.toFixed(2)}</strong>
-          <span className={positive ? "positive-text" : "negative-text"}>{positive ? "+" : ""}{stock.change.toFixed(2)} ({positive ? "+" : ""}{stock.changePercent.toFixed(2)}%) today</span>
+          <span className={quotePositive ? "positive-text" : "negative-text"}>{quotePositive ? "+" : ""}{stock.change.toFixed(2)} ({quotePositive ? "+" : ""}{stock.changePercent.toFixed(2)}%) today</span>
           <MarketDataStatusMessage
             status={marketData.status}
             failedSymbols={marketData.failedSymbols}
@@ -37,11 +55,40 @@ export function StockDetailClient({ initialStock }: { initialStock: Stock }) {
       <section className="card stock-chart-card">
         <div className="panel-heading">
           <div><span className="eyebrow">PRICE PERFORMANCE</span><h2>Price history</h2></div>
-          <div className="chart-range-group"><span className="selected">1 MONTH</span></div>
+          <div className="chart-range-group" role="group" aria-label="Historical price range">
+            {marketHistoryRanges.map((item) => (
+              <button
+                type="button"
+                key={item}
+                className={range === item ? "selected" : ""}
+                aria-pressed={range === item}
+                onClick={() => setRange(item)}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="stock-chart-value"><span>{"$" + stock.price.toFixed(2)}</span><span className={positive ? "positive-text" : "negative-text"}>{positive ? "+" : ""}{stock.changePercent.toFixed(2)}%</span></div>
-        <PerformanceChart data={stock.history} label={stock.symbol + " simulated one month price history"} />
-        <div className="chart-x-axis"><span>SEP 01</span><span>SEP 08</span><span>SEP 15</span><span>SEP 22</span><span>TODAY</span></div>
+        <div className="stock-chart-value">
+          <span>{"$" + stock.price.toFixed(2)}</span>
+          <span className={chartPositive === undefined ? "" : chartPositive ? "positive-text" : "negative-text"}>
+            {rangePercent === null ? "—" : (rangePercent >= 0 ? "+" : "") + rangePercent.toFixed(2) + "%"} {range}
+          </span>
+        </div>
+        {historical.status === "loading" ? (
+          <div className="chart-empty" role="status">Loading real Finnhub historical prices…</div>
+        ) : historical.status === "error" ? (
+          <div className="chart-empty chart-error" role="alert">{historical.error}</div>
+        ) : (
+          <>
+            <PerformanceChart
+              data={points.map((point) => point.close)}
+              isPositive={chartPositive}
+              label={stock.symbol + " real historical closing prices for " + range}
+            />
+            <div className="chart-x-axis">{axisLabels.map((label, index) => <span key={index}>{label}</span>)}</div>
+          </>
+        )}
       </section>
 
       <div className="stock-metric-grid">

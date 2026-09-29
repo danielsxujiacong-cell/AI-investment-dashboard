@@ -2,6 +2,7 @@ type ChartProps = {
   data: number[];
   className?: string;
   label?: string;
+  isPositive?: boolean;
 };
 
 function coordinates(data: number[], width: number, height: number, inset = 4) {
@@ -21,18 +22,38 @@ function makeLinePath(points: { x: number; y: number }[]) {
     .join(" ");
 }
 
-export function Sparkline({ data, className = "" }: ChartProps) {
+export function Sparkline({ data, className = "", label = "Historical stock price trend", isPositive }: ChartProps) {
+  if (data.length < 2 || data.some((value) => !Number.isFinite(value))) {
+    return <span className={"sparkline-unavailable " + className} role="img" aria-label={label}>—</span>;
+  }
+
+  const positive = isPositive ?? data[data.length - 1] >= data[0];
   const points = coordinates(data, 92, 32, 3);
   const path = makeLinePath(points);
 
   return (
-    <svg className={"sparkline " + className} viewBox="0 0 92 32" preserveAspectRatio="none" aria-hidden="true">
+    <svg
+      className={"sparkline " + (positive ? "positive" : "negative") + " " + className}
+      viewBox="0 0 92 32"
+      preserveAspectRatio="none"
+      role="img"
+      aria-label={label}
+    >
       <path d={path} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
-export function PerformanceChart({ data, label = "Portfolio value over time" }: ChartProps) {
+export function PerformanceChart({
+  data,
+  label = "Historical value over time",
+  isPositive,
+}: ChartProps) {
+  if (data.length < 2 || data.some((value) => !Number.isFinite(value))) {
+    return <div className="chart-empty" role="status">Historical price data is unavailable.</div>;
+  }
+
+  const positive = isPositive ?? data[data.length - 1] >= data[0];
   const width = 760;
   const height = 208;
   const points = coordinates(data, width, height, 6);
@@ -42,7 +63,7 @@ export function PerformanceChart({ data, label = "Portfolio value over time" }: 
   const areaPath = linePath + " L " + last.x + " " + height + " L " + first.x + " " + height + " Z";
 
   return (
-    <div className="performance-chart">
+    <div className={"performance-chart " + (positive ? "chart-positive" : "chart-negative")}>
       <svg viewBox={"0 0 " + width + " " + height} preserveAspectRatio="none" role="img" aria-label={label}>
         <defs>
           <linearGradient id="portfolioFill" x1="0" x2="0" y1="0" y2="1">

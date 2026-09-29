@@ -20,6 +20,10 @@ const nextConfig: NextConfig = {
             source: "/api/market/quote/:symbol",
             destination: "http://127.0.0.1:8787/api/market/quote/:symbol",
           },
+          {
+            source: "/api/market/candles/:symbol",
+            destination: "http://127.0.0.1:8787/api/market/candles/:symbol",
+          },
         ]
       : undefined,
 };
