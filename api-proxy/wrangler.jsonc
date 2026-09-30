@@ -13,6 +13,6 @@
     "AI_MODEL": "qwen-plus"
   },
   "secrets": {
-    "required": ["FINNHUB_API_KEY", "MASSIVE_API_KEY", "AI_API_KEY"]
+    "required": ["FINNHUB_API_KEY", "MASSIVE_API_KEY"]
   }
 }
