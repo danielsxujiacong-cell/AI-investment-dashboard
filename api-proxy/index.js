@@ -332,6 +332,16 @@ function compactAssistantContext(context) {
     periodHigh: Number.isFinite(summary.periodHigh) ? summary.periodHigh : null,
     periodLow: Number.isFinite(summary.periodLow) ? summary.periodLow : null,
   }));
+  const marketSnapshot = Array.isArray(context.marketSnapshot) ? context.marketSnapshot : [];
+  const boundedMarketSnapshot = marketSnapshot.filter(isRecord).slice(0, 20).map((snapshot) => ({
+    symbol: clipAssistantText(snapshot.symbol, 16),
+    currentPrice: Number.isFinite(snapshot.currentPrice) ? snapshot.currentPrice : null,
+    dailyChange: Number.isFinite(snapshot.dailyChange) ? snapshot.dailyChange : null,
+    dailyChangePercent: Number.isFinite(snapshot.dailyChangePercent) ? snapshot.dailyChangePercent : null,
+    dailyDirection: clipAssistantText(snapshot.dailyDirection, 16),
+    massiveOneMonthChangePercent: Number.isFinite(snapshot.massiveOneMonthChangePercent) ? snapshot.massiveOneMonthChangePercent : null,
+    monthDirection: clipAssistantText(snapshot.monthDirection, 16),
+  }));
 
   return {
     watchlist: watchlist.slice(0, 20).map((item) => isRecord(item) ? ({
@@ -357,6 +367,7 @@ function compactAssistantContext(context) {
     marketDataStatus: clipAssistantText(context.marketDataStatus, 40),
     marketHistorySource: clipAssistantText(context.marketHistorySource, 40),
     marketHistory: boundedMarketHistory,
+    marketSnapshot: boundedMarketSnapshot,
     latestFinnhubQuotes: isRecord(context.latestFinnhubQuotes) ? context.latestFinnhubQuotes : {},
     investmentMemory: boundedMemory,
     investmentNotes: boundedNotes,

@@ -159,6 +159,19 @@ export function MarketBriefCard() {
       setFeedback("A brief needs live Finnhub quotes and Massive historical prices. They are currently unavailable; your last successful brief is unchanged.");
       return;
     }
+    const marketSnapshot = stocks.map((stock) => {
+      const quote = marketData.liveQuotes[stock.symbol];
+      const history = marketHistory.find((summary) => summary.symbol === stock.symbol);
+      return {
+        symbol: stock.symbol,
+        currentPrice: quote?.price ?? null,
+        dailyChange: quote?.change ?? null,
+        dailyChangePercent: quote?.changePercent ?? null,
+        dailyDirection: !quote ? "unavailable" : quote.changePercent > 0 ? "up" : quote.changePercent < 0 ? "down" : "flat",
+        massiveOneMonthChangePercent: history?.changePercent ?? null,
+        monthDirection: !history ? "unavailable" : history.changePercent > 0 ? "up" : history.changePercent < 0 ? "down" : "flat",
+      };
+    });
 
     const portfolio = data.portfolio.map((holding) => {
       const quote = marketData.liveQuotes[holding.symbol];
@@ -180,7 +193,8 @@ export function MarketBriefCard() {
         "Create today's concise Daily Brief using the dashboard context in this conversation.",
         "Return only one valid JSON object with exactly these string fields: marketOverview, opportunities, risks, watchlistFocus, portfolioNote.",
         "Use one or two short sentences per field and keep the whole brief concise.",
-        "In Market Overview, summarize only the market picture supported by the supplied watchlist quotes and Massive history; do not imply broad-market coverage.",
+        "Use marketSnapshot as the symbol-by-symbol source of truth. Finnhub dailyDirection is the current-session move; Massive monthDirection is the 1M trend. Never mix their signs or time periods.",
+        "In Market Overview, summarize the watchlist's daily breadth and separately describe the 1M trend. Do not imply broad-market coverage.",
         "In Watchlist Focus, name 1 to 3 supplied symbols and give a concrete observed signal, including the current Finnhub price and daily percent change when available.",
         "In Portfolio Note, refer to a saved holding and its quote or cost context when present; if there are no holdings, say that briefly.",
         "If Investment Memory or Investment Notes contain saved text, use at least one relevant thesis, risk, exit condition, or note in Risks or Portfolio Note. If neither has content, say that briefly.",
@@ -200,6 +214,7 @@ export function MarketBriefCard() {
         latestFinnhubQuotes: marketData.liveQuotes,
         marketHistorySource: "Massive",
         marketHistory,
+        marketSnapshot,
         investmentMemory: data.investmentMemory,
         investmentNotes: data.investmentNotes,
       },
