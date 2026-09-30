@@ -9,10 +9,10 @@
   },
   "vars": {
     "ALLOWED_ORIGINS": "https://danielsxujiacong-cell.github.io,http://localhost:3000,http://127.0.0.1:3000",
-    "AI_BASE_URL": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-    "AI_MODEL": "qwen-plus"
+    "AI_BASE_URL": "https://open.bigmodel.cn/api/paas/v4/",
+    "AI_MODEL": "glm-4-flash-250414"
   },
   "secrets": {
-    "required": ["FINNHUB_API_KEY", "MASSIVE_API_KEY"]
+    "required": ["FINNHUB_API_KEY", "MASSIVE_API_KEY", "AI_API_KEY"]
   }
 }

@@ -18,7 +18,7 @@ Cloudflare Worker API Proxy 与 GitHub Pages 前端均已部署；Finnhub 继续
 
 ## V3 及主题模式
 
-V1–V3 现有产品结构保留，AI Assistant 继续使用 Mock AI，待以后配置 `OPENAI_API_KEY` 后再接入服务端 Responses API。Light / Dark Mode 已加入，首次访问跟随系统偏好，用户选择保存在浏览器本地。
+V1–V3 现有产品结构保留。AI Assistant 已通过 Cloudflare Worker 接入 OpenAI-Compatible Chat Completions；接口不可用时继续回退 Mock AI。Light / Dark Mode 已加入，首次访问跟随系统偏好，用户选择保存在浏览器本地。
 
 ## V4：Personal Investment System
 
@@ -26,7 +26,7 @@ V1–V3 现有产品结构保留，AI Assistant 继续使用 Mock AI，待以后
 
 ## V5 第一阶段：国产 OpenAI-Compatible AI API
 
-已完成通用 Worker Chat Completions 路由、个人上下文装配、Thinking / API unavailable / 模型状态和 Mock fallback。默认候选配置为百炼北京端 `qwen-plus`。下一步由用户在百炼控制台创建 Key，将其安全配置为 Worker Secret，然后进行三条真实上下文对话和线上验收。
+已完成通用 Worker Chat Completions 路由、个人上下文装配、Thinking / API unavailable / 模型状态和 Mock fallback。线上使用智谱 `glm-4-flash-250414`，API Key 保存在 Worker Secret，真实对话已验收。
 
 ## STEP 5：用户系统和数据库
 

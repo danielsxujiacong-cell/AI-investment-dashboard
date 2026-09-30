@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-**V5 第一阶段代码已实现，待配置 AI API Key 并完成线上验收。** AI Assistant 通过 Cloudflare Worker 调用 OpenAI-Compatible Chat Completions，当前候选配置为百炼北京端 `qwen-plus`；切换服务只需替换 `AI_BASE_URL`、`AI_API_KEY` 和 `AI_MODEL`。生产 Key 仅放在 Worker Secret，本地调试 Key 可放在已忽略的 `.env.local`。发送消息时，当前问题、近期对话、Watchlist、Portfolio、成功取得的 Finnhub 报价、Investment Memory 和 Investment Notes 会经 Worker 发给所配置的 AI 服务；个人数据仍保存在当前设备，未发送时不会离开浏览器。超时、限流或错误时显示 API unavailable 状态并回退 Mock。
+**V5 第一阶段已部署并通过真实 AI 对话验收。** AI Assistant 通过 Cloudflare Worker 调用供应商中立的 OpenAI-Compatible Chat Completions，当前使用智谱 `glm-4-flash-250414`；切换服务只需替换 Worker variables `AI_BASE_URL`、`AI_MODEL` 和 Worker Secret `AI_API_KEY`。AI Key 仅存放在 Cloudflare Worker Secret，不写入 `.env`、源码或仓库。发送消息时，当前问题、近期对话、Watchlist、Portfolio、成功取得的 Finnhub 报价、Investment Memory 和 Investment Notes 会经 Worker 发给所配置的 AI 服务；个人数据仍保存在当前设备，未发送时不会离开浏览器。超时、限流或错误时显示 API unavailable 状态并回退 Mock。
 
 ## 开发阶段
 
@@ -15,7 +15,7 @@
 - STEP 2：GitHub Pages 静态网站部署（已采用）
 - STEP 2.5：Cloudflare Worker 行情代理（已部署并通过公网验证）
 - V4：Personal Investment System（已完成，本机 localStorage）
-- V5 第一阶段：国产 OpenAI-Compatible AI API 接入（实现完成；待添加 Worker Secret 与线上验收）
+- V5 第一阶段：供应商中立的 OpenAI-Compatible AI API 接入（智谱 `glm-4-flash-250414`；真实对话已验收）
 - STEP 5：用户系统和数据库
 - STEP 6：个人 AI 投资助手
 
@@ -42,7 +42,7 @@
 
 ## 本地运行
 
-需要 Node.js 20.9 或更高版本。将 `MASSIVE_API_KEY` 写入项目本地 `.env.local`；如需本地实时报价，再加入 `FINNHUB_API_KEY`。本地 AI 调试时，可把 `AI_BASE_URL`、`AI_API_KEY`、`AI_MODEL` 写入 `.env.local`。`.env.local` 已由 `.gitignore` 排除；线上 `AI_API_KEY` 只配置为 Cloudflare Worker Secret。
+需要 Node.js 20.9 或更高版本。将 `MASSIVE_API_KEY` 写入项目本地 `.env.local`；如需本地实时报价，再加入 `FINNHUB_API_KEY`。`.env.local` 已由 `.gitignore` 排除；AI Key 只配置为 Cloudflare Worker Secret。
 
 ```bash
 npm install
@@ -65,10 +65,10 @@ node node_modules/next/dist/bin/next dev
 node node_modules/wrangler/bin/wrangler.js deploy --config api-proxy/wrangler.jsonc --secrets-file api-proxy/.dev.vars
 ```
 
-部署时将 `FINNHUB_API_KEY`、`MASSIVE_API_KEY`、`AI_API_KEY` 分别作为 Worker Secrets 配置；`AI_BASE_URL` 和 `AI_MODEL` 是可切换的 Worker variables。部署命令和 `.dev.vars` 均保持在本机，不要把 API Key 写入仓库或 GitHub Pages。把 Worker URL 设置为 GitHub 仓库变量 `MARKET_API_BASE_URL`，然后推送 `main` 触发 Pages 更新。
+将 `AI_API_KEY` 配置为 Cloudflare Worker Secret（不要放进 `.env`、源码或仓库）；`AI_BASE_URL` 和 `AI_MODEL` 是可切换的 Worker variables。保留现有 `FINNHUB_API_KEY`、`MASSIVE_API_KEY` Worker Secrets。部署命令和 `.dev.vars` 均保持在本机，不要把 API Key 写入仓库或 GitHub Pages。把 Worker URL 设置为 GitHub 仓库变量 `MARKET_API_BASE_URL`，然后推送 `main` 触发 Pages 更新。
 
 ## 后续计划
 
-个人数据仍保存在设备本地；每次发送时仅按请求转发给配置的 AI 服务。当前不包含联网搜索、新闻抓取、自动投资、定时任务、Daily Brief AI 化、Supabase、登录或跨设备同步。真实 AI 上线验收依赖完成百炼 API Key 创建与 Worker Secret 配置。
+个人数据仍保存在设备本地；每次发送时仅按请求转发给配置的 AI 服务。当前不包含联网搜索、新闻抓取、自动投资、定时任务、Daily Brief AI 化、Supabase、登录或跨设备同步。真实智谱 AI 对话已通过线上 Worker 验收。
 
 详见 [开发路线](docs/ROADMAP.md)、[产品说明](docs/PRODUCT.md) 和 [技术方案](docs/TECH_STACK.md)。

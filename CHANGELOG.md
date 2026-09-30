@@ -2,8 +2,9 @@
 
 ## 2026-09-30
 
+- Switched the configurable Worker AI endpoint to Zhipu `glm-4-flash-250414` and verified real chat and NVDA analysis responses; the API key remains a Cloudflare Worker Secret and portfolio context forwarding stays unchanged.
 - V5 Stage 1: added a provider-neutral OpenAI-Compatible chat route to the Cloudflare Worker, with server-side API key handling, current Finnhub quotes, Portfolio, Investment Memory, Investment Notes, and recent conversation context.
-- Updated the existing Assistant page with model/API status, Thinking state, API-error Mock fallback, and a notice explaining when local investment context is sent. The API credential and real-provider acceptance remain pending user setup.
+- Updated the existing Assistant page with model/API status, Thinking state, API-error Mock fallback, and a notice explaining when local investment context is sent. At implementation time, provider acceptance was pending the user's Worker Secret setup; live acceptance was completed afterward.
 - V4.1: load Massive history only for the selected period, share and reuse stock/range requests, and cache verified OHLC in memory plus sessionStorage across route changes and reloads. Use stale real history on rate limits, retry 429 once after a delay, and keep API errors out of ordinary UI copy.
 - Aligned quote and history source labels. Finnhub supplies Current Price, Open, High, Low, and Previous Close; the static Market Cap, P/E, 52 Week High, and 52 Week Low snapshots remain labeled Mock Data.
 

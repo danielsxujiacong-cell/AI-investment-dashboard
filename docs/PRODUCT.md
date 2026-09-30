@@ -30,4 +30,4 @@ AI Investment Dashboard，一个个人 AI 投资研究控制台
 - AI Assistant 支持通过 Cloudflare Worker 调用通用 OpenAI-Compatible 对话接口；发送时附带 Watchlist、Portfolio、真实 Finnhub 报价、Investment Memory 和 Investment Notes，接口失败时回退 Mock。
 - 持仓、投资记忆和日志保存在当前设备 localStorage；用户发送消息时，该请求与投资上下文会转发到配置的 AI 服务。
 
-每日市场简报和部分基本面仍使用产品 Mock Data。AI 通过 `AI_BASE_URL`、`AI_API_KEY`、`AI_MODEL` 配置兼容服务；API Key 仅配置在 Cloudflare Worker Secret。V5 当前候选模型为百炼 `qwen-plus`，线上真实对话验收待 API Key 设置后进行。
+每日市场简报和部分基本面仍使用产品 Mock Data。AI 通过 `AI_BASE_URL`、`AI_API_KEY`、`AI_MODEL` 配置兼容服务；API Key 仅配置在 Cloudflare Worker Secret。V5 当前线上模型为智谱 `glm-4-flash-250414`，真实对话已验收。
