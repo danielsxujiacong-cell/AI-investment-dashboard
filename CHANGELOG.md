@@ -2,6 +2,7 @@
 
 ## 2026-09-30
 
+- V5.2: replaced the homepage's simulated Daily Brief with a manual GLM generation flow through the existing Cloudflare Worker. It sends live Finnhub quotes, Massive 1M history summaries, Watchlist, local Portfolio, Investment Memory, and Investment Notes; successful output is cached locally with its generation time, and a failed refresh retries once while retaining the prior successful brief.
 - Switched the configurable Worker AI endpoint to Zhipu `glm-4-flash-250414` and verified real chat and NVDA analysis responses; the API key remains a Cloudflare Worker Secret and portfolio context forwarding stays unchanged.
 - V5 Stage 1: added a provider-neutral OpenAI-Compatible chat route to the Cloudflare Worker, with server-side API key handling, current Finnhub quotes, Portfolio, Investment Memory, Investment Notes, and recent conversation context.
 - Updated the existing Assistant page with model/API status, Thinking state, API-error Mock fallback, and a notice explaining when local investment context is sent. At implementation time, provider acceptance was pending the user's Worker Secret setup; live acceptance was completed afterward.

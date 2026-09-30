@@ -25,7 +25,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="dashboard-bottom-line">
-        <div><span className="bottom-line-icon"><Icon name="shield" size={17} /></span><div><strong>Built for perspective, not prediction.</strong><span>Quotes and historical charts use market data; AI insights remain illustrative.</span></div></div>
+        <div><span className="bottom-line-icon"><Icon name="shield" size={17} /></span><div><strong>Built for perspective, not prediction.</strong><span>Market data and AI research add context; verify details before acting.</span></div></div>
         <Link href="/portfolio" className="bottom-line-action">Review allocations <Icon name="arrow-right" size={14} /></Link>
       </div>
     </div>

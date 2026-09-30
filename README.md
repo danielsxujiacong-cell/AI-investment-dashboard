@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-**V5 第一阶段已部署并通过真实 AI 对话验收。** AI Assistant 通过 Cloudflare Worker 调用供应商中立的 OpenAI-Compatible Chat Completions，当前使用智谱 `glm-4-flash-250414`；切换服务只需替换 Worker variables `AI_BASE_URL`、`AI_MODEL` 和 Worker Secret `AI_API_KEY`。AI Key 仅存放在 Cloudflare Worker Secret，不写入 `.env`、源码或仓库。发送消息时，当前问题、近期对话、Watchlist、Portfolio、成功取得的 Finnhub 报价、Investment Memory 和 Investment Notes 会经 Worker 发给所配置的 AI 服务；个人数据仍保存在当前设备，未发送时不会离开浏览器。超时、限流或错误时显示 API unavailable 状态并回退 Mock。
+**V5.2 Daily Brief 已接入真实 GLM 生成。** AI Assistant 与首页 Daily Brief 通过 Cloudflare Worker 调用智谱 `glm-4-flash-250414`；Daily Brief 使用 Watchlist、Portfolio、Finnhub 报价、Massive 1M 历史摘要、Investment Memory 和 Investment Notes。成功内容与生成时间保存在本机 localStorage，同日可重复打开查看；只有点击生成/刷新时才调用 AI。AI Key 仅存放在 Cloudflare Worker Secret，不写入 `.env`、源码或仓库。个人数据仍保存在当前设备，未请求 AI 时不会离开浏览器；Brief 失败会重试一次，之后保留上次成功内容或显示友好提示。
 
 ## 开发阶段
 
@@ -16,6 +16,7 @@
 - STEP 2.5：Cloudflare Worker 行情代理（已部署并通过公网验证）
 - V4：Personal Investment System（已完成，本机 localStorage）
 - V5 第一阶段：供应商中立的 OpenAI-Compatible AI API 接入（智谱 `glm-4-flash-250414`；真实对话已验收）
+- V5.2：首页 Daily Brief 真实 AI 生成与本机当日缓存
 - STEP 5：用户系统和数据库
 - STEP 6：个人 AI 投资助手
 
@@ -23,7 +24,7 @@
 
 - 以快速交付可用 MVP 为优先，按阶段逐步迭代。
 - 保持实现简单，只在当前阶段确有需要时增加依赖和架构复杂度。
-- 报价保留 Mock Data 回退，历史图表不回退到模拟曲线；AI API 出错时回退 Mock。AI Key 只放入 Worker Secret，绝不写入前端或 GitHub。
+- 报价保留 Mock Data 回退，历史图表不回退到模拟曲线；Assistant AI API 出错时回退 Mock，Daily Brief 保留上次成功内容或显示友好提示。AI Key 只放入 Worker Secret，绝不写入前端或 GitHub。
 - 每个阶段完成后更新项目状态和后续计划。
 
 ## 当前功能
@@ -36,6 +37,7 @@
 - Portfolio 新增、编辑和删除个人持仓；按 Finnhub 当前价格计算市值、成本和未实现盈亏
 - 股票详情中的个人 Investment Memory，以及可新增、编辑和删除的 Investment Notes
 - AI Assistant 保留原页面与快捷问题；配置 API 后发送个人上下文进行真实对话，显示 Thinking、API unavailable 和模型名称，失败时回退 Mock
+- 首页 Daily Brief 可手动生成/刷新，按 Market Overview、Opportunities、Risks、Watchlist Focus、Portfolio Note 展示真实 GLM 简报；展示 Last generated 时间并缓存成功结果
 - 个人投资数据保存在当前设备的 localStorage，不会跨电脑或手机同步
 - 可展开的每日 AI 市场简报
 - 桌面侧边栏与手机底部导航
@@ -69,6 +71,6 @@ node node_modules/wrangler/bin/wrangler.js deploy --config api-proxy/wrangler.js
 
 ## 后续计划
 
-个人数据仍保存在设备本地；每次发送时仅按请求转发给配置的 AI 服务。当前不包含联网搜索、新闻抓取、自动投资、定时任务、Daily Brief AI 化、Supabase、登录或跨设备同步。真实智谱 AI 对话已通过线上 Worker 验收。
+个人数据仍保存在设备本地；每次发送时仅按请求转发给配置的 AI 服务。当前不包含联网搜索、新闻抓取、自动投资、定时任务、Supabase、登录或跨设备同步。真实智谱 AI 对话已通过线上 Worker 验收。
 
 详见 [开发路线](docs/ROADMAP.md)、[产品说明](docs/PRODUCT.md) 和 [技术方案](docs/TECH_STACK.md)。

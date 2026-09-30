@@ -28,6 +28,10 @@ V1–V3 现有产品结构保留。AI Assistant 已通过 Cloudflare Worker 接�
 
 已完成通用 Worker Chat Completions 路由、个人上下文装配、Thinking / API unavailable / 模型状态和 Mock fallback。线上使用智谱 `glm-4-flash-250414`，API Key 保存在 Worker Secret，真实对话已验收。
 
+## V5.2：首页 Daily Brief 真实生成
+
+已将首页 Daily Brief 接入现有 GLM Worker。用户手动生成时使用 Watchlist、Portfolio、Finnhub 当前报价、Massive 1M 历史摘要、Investment Memory 和 Investment Notes；成功结果与生成时间写入本机 localStorage，刷新时不自动重复请求。失败重试一次，保留上次成功内容或显示友好提示。
+
 ## STEP 5：用户系统和数据库
 
 引入用户身份认证与数据库，优先评估 Supabase。
