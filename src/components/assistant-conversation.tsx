@@ -23,6 +23,7 @@ export function AssistantConversation() {
   const marketData = useStockMarketData();
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
+  const [retrying, setRetrying] = useState(false);
   const [assistantStatus, setAssistantStatus] = useState<AssistantStatus>({ checked: false, available: false, model: null });
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -74,55 +75,76 @@ export function AssistantConversation() {
 
     const userId = nextId.current++;
     const assistantId = nextId.current++;
-    const history = messages.filter((message) => message.id > 0).slice(-10).map((message) => ({
+    const history = messages.filter((message) => message.id > 0).slice(-8).map((message) => ({
       role: message.role,
-      content: message.text,
+      content: message.text.slice(0, 2_000),
     }));
     setMessages((current) => [...current, { id: userId, role: "user", text: prompt }]);
     setDraft("");
     setPending(true);
+    setRetrying(false);
 
     try {
-      const response = await fetch(marketApiUrl("/api/assistant"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        cache: "no-store",
-        signal: AbortSignal.timeout(30_000),
-        body: JSON.stringify({
-          question: prompt,
-          history,
-          context: {
-            watchlist: stocks.map((stock) => ({
-              symbol: stock.symbol,
-              name: stock.name,
-              sector: stock.sector,
-              latestFinnhubQuote: marketData.liveQuotes[stock.symbol] ?? null,
-            })),
-            portfolio: data.portfolio.map((holding) => {
-              const quote = marketData.liveQuotes[holding.symbol];
-              const marketValue = quote ? holding.shares * quote.price : null;
-              const costBasis = holding.shares * holding.averageCost;
-              return {
-                ...holding,
-                currentPrice: quote?.price ?? null,
-                dailyChange: quote?.change ?? null,
-                dailyChangePercent: quote?.changePercent ?? null,
-                quoteUpdatedAt: quote?.updatedAt ?? null,
-                marketValue,
-                costBasis,
-                unrealizedGainLoss: marketValue === null ? null : marketValue - costBasis,
-              };
-            }),
-            marketDataSource: "Finnhub",
-            marketDataStatus: marketData.status,
-            latestFinnhubQuotes: marketData.liveQuotes,
-            investmentMemory: data.investmentMemory,
-            investmentNotes: data.investmentNotes,
-          },
-        }),
+      const requestBody = JSON.stringify({
+        question: prompt,
+        history,
+        context: {
+          watchlist: stocks.map((stock) => ({
+            symbol: stock.symbol,
+            name: stock.name,
+            sector: stock.sector,
+            latestFinnhubQuote: marketData.liveQuotes[stock.symbol] ?? null,
+          })),
+          portfolio: data.portfolio.map((holding) => {
+            const quote = marketData.liveQuotes[holding.symbol];
+            const marketValue = quote ? holding.shares * quote.price : null;
+            const costBasis = holding.shares * holding.averageCost;
+            return {
+              ...holding,
+              currentPrice: quote?.price ?? null,
+              dailyChange: quote?.change ?? null,
+              dailyChangePercent: quote?.changePercent ?? null,
+              quoteUpdatedAt: quote?.updatedAt ?? null,
+              marketValue,
+              costBasis,
+              unrealizedGainLoss: marketValue === null ? null : marketValue - costBasis,
+            };
+          }),
+          marketDataSource: "Finnhub",
+          marketDataStatus: marketData.status,
+          latestFinnhubQuotes: marketData.liveQuotes,
+          investmentMemory: data.investmentMemory,
+          investmentNotes: data.investmentNotes,
+        },
       });
-      if (!response.ok) throw new Error("AI service is unavailable (" + response.status + ").");
-      const result = await response.json() as { answer?: unknown; model?: unknown };
+
+      let result: { answer?: unknown; model?: unknown } | null = null;
+      for (let attempt = 1; attempt <= 2; attempt += 1) {
+        try {
+          const response = await fetch(marketApiUrl("/api/assistant"), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            cache: "no-store",
+            signal: AbortSignal.timeout(45_000),
+            body: requestBody,
+          });
+          if (!response.ok) throw new Error("AI service is unavailable (" + response.status + ").");
+          result = await response.json() as { answer?: unknown; model?: unknown };
+          if (typeof result.answer !== "string" || !result.answer.trim()) throw new Error("AI service returned an empty response.");
+          break;
+        } catch (error) {
+          if (attempt === 2) throw error;
+          setRetrying(true);
+          await new Promise<void>((resolve) => {
+            timer.current = setTimeout(() => {
+              timer.current = null;
+              resolve();
+            }, 700);
+          });
+        }
+      }
+
+      if (!result) throw new Error("AI service returned no response.");
       const answer = result.answer;
       if (typeof answer !== "string" || !answer.trim()) throw new Error("AI service returned an empty response.");
 
@@ -150,6 +172,7 @@ export function AssistantConversation() {
         source: "mock",
       }]);
     } finally {
+      setRetrying(false);
       setPending(false);
     }
   }
@@ -226,7 +249,7 @@ export function AssistantConversation() {
         <div className="conversation-header">
           <div className="conversation-agent-mark"><Icon name="sparkles" size={16} /></div>
           <div><strong>Investment assistant</strong><span>{assistantStatus.available ? "AI API · contextual research" : "On-device Mock fallback"}</span></div>
-          <div className="conversation-model"><i />{pending ? "THINKING…" : assistantStatus.available ? assistantStatus.model || "AI API" : assistantStatus.checked ? "API UNAVAILABLE · MOCK" + (assistantStatus.model ? " · " + assistantStatus.model : "") : "CHECKING API…"}</div>
+          <div className="conversation-model"><i />{pending ? retrying ? "正在重试…" : "THINKING…" : assistantStatus.available ? assistantStatus.model || "AI API" : assistantStatus.checked ? "API UNAVAILABLE · MOCK" + (assistantStatus.model ? " · " + assistantStatus.model : "") : "CHECKING API…"}</div>
         </div>
         <div className="conversation-messages" role="log" aria-live="polite">
           {messages.map((message) => (
