@@ -114,7 +114,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="sidebar-bottom">
           <div className="market-pulse">
             <div className="pulse-icon"><Icon name="activity" size={17} /></div>
-            <div><strong>Market pulse</strong><span><i className="live-dot" /> Session open</span></div>
+            <div><strong>Market pulse · Mock</strong><span><i className="live-dot" /> Session open</span></div>
             <span className="pulse-value">+0.8%</span>
           </div>
           <div className="sidebar-profile">
@@ -130,7 +130,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="mobile-brand"><Brand /></div>
           <div className="breadcrumb"><span>WORKSPACE</span><b>/</b><strong>{section.label.toUpperCase()}</strong></div>
           <div className="topbar-actions">
-            <div className="market-status"><i className="live-dot" /><span>Market Open</span><small>SIMULATED</small></div>
+            <div className="market-status"><i className="live-dot" /><span>Market Data</span></div>
             <div className="topbar-divider" />
             <button
               type="button"

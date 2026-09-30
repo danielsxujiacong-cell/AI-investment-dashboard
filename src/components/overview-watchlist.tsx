@@ -21,7 +21,7 @@ export function OverviewWatchlist() {
       <div className="watchlist-rows">
         {marketData.stocks.map((stock) => <StockRow key={stock.symbol} stock={stock} history={marketData.history[stock.symbol]} />)}
       </div>
-      <MarketHistoryStatusMessage status={marketData.historyStatus} failedSymbols={marketData.failedHistorySymbols} error={marketData.historyError} />
+      <MarketHistoryStatusMessage status={marketData.historyStatus} failedSymbols={marketData.failedHistorySymbols} />
       <MarketDataStatusMessage
         status={marketData.status}
         failedSymbols={marketData.failedSymbols}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { parseFinnhubQuote, type LiveStockQuote } from "@/data/market-quotes";
 import { marketApiUrl } from "@/data/market-api";
-import { getHistoricalPrices, type HistoricalPricePoint } from "@/data/market-history";
+import { getCachedHistoricalPrices, getHistoricalPrices, type HistoricalPricePoint } from "@/data/market-history";
 import { stocks as mockStocks, type Stock } from "@/data/stocks";
 
 export type MarketDataStatus = "loading" | "live" | "partial" | "mock";
@@ -27,7 +27,6 @@ type MarketDataState = {
   history: Record<string, MiniHistoryState>;
   historyStatus: "idle" | "loading" | "ready" | "partial" | "error";
   failedHistorySymbols: string[];
-  historyError: string | null;
 };
 
 const quoteCache = new Map<string, { expiresAt: number; quote: LiveStockQuote }>();
@@ -63,7 +62,6 @@ export function useStockMarketData(includeHistory = false): MarketDataState {
     includeHistory ? "loading" : "idle",
   );
   const [failedHistorySymbols, setFailedHistorySymbols] = useState<string[]>([]);
-  const [historyError, setHistoryError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -99,17 +97,35 @@ export function useStockMarketData(includeHistory = false): MarketDataState {
       setHistory({});
       setHistoryStatus("idle");
       setFailedHistorySymbols([]);
-      setHistoryError(null);
       return () => {
         cancelled = true;
       };
     }
 
-    setHistoryStatus("loading");
-    setHistory(Object.fromEntries(mockStocks.map((stock) => [
-      stock.symbol,
-      { status: "loading", points: [], error: null },
-    ])));
+    const cachedHistory = Object.fromEntries(mockStocks.map((stock) => {
+      const points = getCachedHistoricalPrices(stock.symbol, "1M");
+      return [stock.symbol, points
+        ? { status: "ready" as const, points, error: null }
+        : { status: "loading" as const, points: [], error: null }];
+    }));
+    setHistory(cachedHistory);
+    setHistoryStatus(
+      Object.values(cachedHistory).every((item) => item.status === "ready") ? "ready" : "loading",
+    );
+
+    const handleRateLimit = (event: Event) => {
+      const detail = (event as CustomEvent<{ symbol: string; range: string }>).detail;
+      if (!detail || detail.range !== "1M" || !mockStocks.some((stock) => stock.symbol === detail.symbol)) return;
+      if (getCachedHistoricalPrices(detail.symbol, "1M")) return;
+      const message = "Historical prices are temporarily limited. We'll retry automatically.";
+      setHistory((current) => ({
+        ...current,
+        [detail.symbol]: { status: "error", points: [], error: message },
+      }));
+      setFailedHistorySymbols((current) => [...new Set([...current, detail.symbol])]);
+      setHistoryStatus("partial");
+    };
+    window.addEventListener("market-history-rate-limited", handleRateLimit);
 
     void Promise.allSettled(mockStocks.map((stock) => getHistoricalPrices(stock.symbol, "1M")))
       .then((results) => {
@@ -117,24 +133,24 @@ export function useStockMarketData(includeHistory = false): MarketDataState {
 
         const nextHistory: Record<string, MiniHistoryState> = {};
         const nextFailures: string[] = [];
-        const errors: string[] = [];
         results.forEach((result, index) => {
           const symbol = mockStocks[index].symbol;
           if (result.status === "fulfilled") {
             nextHistory[symbol] = { status: "ready", points: result.value, error: null };
           } else {
-            const message = result.reason instanceof Error
-              ? result.reason.message
-              : "Historical price request failed.";
-            nextHistory[symbol] = { status: "error", points: [], error: message };
-            nextFailures.push(symbol);
-            if (!errors.includes(message)) errors.push(message);
+            const cachedPoints = getCachedHistoricalPrices(symbol, "1M");
+            if (cachedPoints) {
+              nextHistory[symbol] = { status: "ready", points: cachedPoints, error: null };
+            } else {
+              const message = "Historical prices are temporarily limited. We'll retry shortly.";
+              nextHistory[symbol] = { status: "error", points: [], error: message };
+              nextFailures.push(symbol);
+            }
           }
         });
 
         setHistory(nextHistory);
         setFailedHistorySymbols(nextFailures);
-        setHistoryError(errors[0] ?? null);
         setHistoryStatus(
           nextFailures.length === 0 ? "ready" :
             nextFailures.length < mockStocks.length ? "partial" : "error",
@@ -143,6 +159,7 @@ export function useStockMarketData(includeHistory = false): MarketDataState {
 
     return () => {
       cancelled = true;
+      window.removeEventListener("market-history-rate-limited", handleRateLimit);
     };
   }, [includeHistory]);
 
@@ -170,6 +187,5 @@ export function useStockMarketData(includeHistory = false): MarketDataState {
     history,
     historyStatus,
     failedHistorySymbols,
-    historyError,
   };
 }

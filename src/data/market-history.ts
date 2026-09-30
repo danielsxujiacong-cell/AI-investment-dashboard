@@ -12,7 +12,6 @@ export type HistoricalPricePoint = {
   volume: number;
 };
 
-
 export function formatHistoryTimestamp(timestamp: number, range: MarketHistoryRange) {
   const date = new Date(timestamp);
   if (range === "1D") {
@@ -41,10 +40,42 @@ type MarketHistoryPayload = {
   error?: unknown;
 };
 
-const historyCache = new Map<string, {
+type CachedHistory = {
+  cachedAt: number;
   expiresAt: number;
-  promise: Promise<HistoricalPricePoint[]>;
-}>();
+  points: HistoricalPricePoint[];
+};
+
+class HistoryApiError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+  }
+}
+
+const storagePrefix = "ai-investment-dashboard:historical-market-data:v1:";
+const historyCache = new Map<string, CachedHistory>();
+const historyRequests = new Map<string, Promise<HistoricalPricePoint[]>>();
+
+function cacheKey(symbol: string, range: MarketHistoryRange) {
+  return symbol.toUpperCase() + ":" + range;
+}
+
+function storageKey(key: string) {
+  return storagePrefix + key;
+}
+
+function sessionStorageOrNull() {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.sessionStorage;
+  } catch {
+    return null;
+  }
+}
+
+function cacheTtl(range: MarketHistoryRange) {
+  return range === "1D" ? 30_000 : 15 * 60_000;
+}
 
 function parseCandles(payload: unknown): HistoricalPricePoint[] {
   if (!payload || typeof payload !== "object") {
@@ -83,48 +114,102 @@ function parseCandles(payload: unknown): HistoricalPricePoint[] {
   return points;
 }
 
-function loadBaseHistory(symbol: string, range: "1D" | "1Y") {
-  const key = symbol + ":" + range;
-  const cached = historyCache.get(key);
-  if (cached && cached.expiresAt > Date.now()) return cached.promise;
+function readCachedHistory(symbol: string, range: MarketHistoryRange): CachedHistory | null {
+  const key = cacheKey(symbol, range);
+  const memoryValue = historyCache.get(key);
+  if (memoryValue) return memoryValue;
 
-  const request = fetch(marketApiUrl(
+  const storage = sessionStorageOrNull();
+  if (!storage) return null;
+  try {
+    const raw = storage.getItem(storageKey(key));
+    if (!raw) return null;
+    const value: unknown = JSON.parse(raw);
+    if (!value || typeof value !== "object") return null;
+    const record = value as { cachedAt?: unknown; points?: unknown };
+    if (typeof record.cachedAt !== "number" || !Number.isFinite(record.cachedAt)) return null;
+    const points = parseCandles({ candles: record.points });
+    const cached = {
+      cachedAt: record.cachedAt,
+      expiresAt: record.cachedAt + cacheTtl(range),
+      points,
+    };
+    historyCache.set(key, cached);
+    return cached;
+  } catch {
+    return null;
+  }
+}
+
+export function getCachedHistoricalPrices(symbol: string, range: MarketHistoryRange) {
+  return readCachedHistory(symbol, range)?.points ?? null;
+}
+
+function writeCachedHistory(symbol: string, range: MarketHistoryRange, points: HistoricalPricePoint[]) {
+  const key = cacheKey(symbol, range);
+  const cachedAt = Date.now();
+  const record: CachedHistory = { cachedAt, expiresAt: cachedAt + cacheTtl(range), points };
+  historyCache.set(key, record);
+  try {
+    sessionStorageOrNull()?.setItem(storageKey(key), JSON.stringify({ cachedAt, points }));
+  } catch {
+    // The in-memory cache remains available if session storage is disabled or full.
+  }
+}
+
+function delay(milliseconds: number) {
+  return new Promise<void>((resolve) => window.setTimeout(resolve, milliseconds));
+}
+
+async function fetchHistory(symbol: string, range: MarketHistoryRange) {
+  const url = marketApiUrl(
     "/api/market/candles/" + encodeURIComponent(symbol) + "?range=" + range,
-  ), { cache: "no-store" })
-    .then(async (response) => {
+  );
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const response = await fetch(url, { cache: "no-store" });
       const payload: unknown = await response.json().catch(() => null);
       if (!response.ok) {
         const error = payload && typeof payload === "object"
           ? (payload as MarketHistoryPayload).error
           : null;
-        throw new Error(typeof error === "string" ? error : "Historical price request failed (" + response.status + ").");
+        if (response.status === 429) {
+          window.dispatchEvent(new CustomEvent("market-history-rate-limited", {
+            detail: { symbol: symbol.toUpperCase(), range },
+          }));
+        }
+        throw new HistoryApiError(
+          typeof error === "string" ? error : "Historical price request failed (" + response.status + ").",
+          response.status,
+        );
       }
       return parseCandles(payload);
-    });
+    } catch (error) {
+      const status = error instanceof HistoryApiError ? error.status : 0;
+      const retryable = !(error instanceof HistoryApiError) || status === 429 || status >= 500;
+      if (attempt > 0 || !retryable) throw error;
+      await delay(status === 429 ? 65_000 : 10_000);
+    }
+  }
 
-  historyCache.set(key, {
-    expiresAt: Date.now() + (range === "1D" ? 30_000 : 300_000),
-    promise: request,
-  });
-  void request.catch(() => {
-    if (historyCache.get(key)?.promise === request) historyCache.delete(key);
-  });
-  return request;
+  throw new Error("Historical price request failed.");
 }
 
-const rangeDays: Partial<Record<MarketHistoryRange, number>> = {
-  "1W": 7,
-  "1M": 30,
-  "3M": 92,
-};
+export function getHistoricalPrices(symbol: string, range: MarketHistoryRange) {
+  const key = cacheKey(symbol, range);
+  const cached = readCachedHistory(symbol, range);
+  if (cached && cached.expiresAt > Date.now()) return Promise.resolve(cached.points);
 
-export async function getHistoricalPrices(symbol: string, range: MarketHistoryRange) {
-  const baseRange = range === "1D" ? "1D" : "1Y";
-  const candles = await loadBaseHistory(symbol, baseRange);
-  if (range === "1D" || range === "1Y") return candles;
+  const pending = historyRequests.get(key);
+  if (pending) return pending;
 
-  const cutoff = Date.now() - (rangeDays[range] ?? 365) * 24 * 60 * 60 * 1000;
-  const points = candles.filter((candle) => candle.timestamp >= cutoff);
-  if (points.length < 2) throw new Error("There is not enough historical price data for this range.");
-  return points;
+  const request = fetchHistory(symbol.toUpperCase(), range)
+    .then((points) => {
+      writeCachedHistory(symbol, range, points);
+      return points;
+    })
+    .finally(() => historyRequests.delete(key));
+  historyRequests.set(key, request);
+  return request;
 }

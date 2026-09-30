@@ -76,27 +76,27 @@ export function StockDetailClient({ initialStock }: { initialStock: Stock }) {
           </span>
         </div>
         {historical.status === "loading" ? (
-          <div className="chart-empty" role="status">Loading real Massive historical prices…</div>
+          <div className="chart-empty" role="status">Loading Historical Market Data…</div>
         ) : historical.status === "error" ? (
           <div className="chart-empty chart-error" role="alert">{historical.error}</div>
         ) : (
           <>
             <CandlestickChart data={points} label={stock.symbol + " real Massive OHLC candles for " + range} />
             <div className="chart-x-axis">{axisLabels.map((label, index) => <span key={index}>{label}</span>)}</div>
-            <p className="chart-data-note">Massive Basic end-of-day history · current quotes from Finnhub</p>
+            <p className="chart-data-note">Historical Market Data · Massive · Live quotes from Finnhub</p>
           </>
         )}
       </section>
 
       <div className="stock-metric-grid">
-        <div className="card stock-metric-card"><span className="eyebrow">OPEN</span><strong>{"$" + stock.open.toFixed(2)}</strong><span>Today</span></div>
-        <div className="card stock-metric-card"><span className="eyebrow">HIGH</span><strong>{"$" + stock.high.toFixed(2)}</strong><span>Today</span></div>
-        <div className="card stock-metric-card"><span className="eyebrow">LOW</span><strong>{"$" + stock.low.toFixed(2)}</strong><span>Today</span></div>
-        <div className="card stock-metric-card"><span className="eyebrow">PREVIOUS CLOSE</span><strong>{"$" + stock.previousClose.toFixed(2)}</strong><span>Last session</span></div>
-        <div className="card stock-metric-card"><span className="eyebrow">MARKET CAP</span><strong>{stock.marketCap}</strong><span>Simulated snapshot</span></div>
-        <div className="card stock-metric-card"><span className="eyebrow">PRICE / EARNINGS</span><strong>{stock.peRatio}<small>x</small></strong><span>Trailing estimate</span></div>
-        <div className="card stock-metric-card"><span className="eyebrow">52 WEEK HIGH</span><strong>{"$" + stock.weekHigh.toFixed(2)}</strong><span>52 week range</span></div>
-        <div className="card stock-metric-card"><span className="eyebrow">52 WEEK LOW</span><strong>{"$" + stock.weekLow.toFixed(2)}</strong><span>52 week range</span></div>
+        <div className="card stock-metric-card"><span className="eyebrow">OPEN</span><strong>{"$" + stock.open.toFixed(2)}</strong><span>Live Quotes / Market Data · Finnhub</span></div>
+        <div className="card stock-metric-card"><span className="eyebrow">HIGH</span><strong>{"$" + stock.high.toFixed(2)}</strong><span>Live Quotes / Market Data · Finnhub</span></div>
+        <div className="card stock-metric-card"><span className="eyebrow">LOW</span><strong>{"$" + stock.low.toFixed(2)}</strong><span>Live Quotes / Market Data · Finnhub</span></div>
+        <div className="card stock-metric-card"><span className="eyebrow">PREVIOUS CLOSE</span><strong>{"$" + stock.previousClose.toFixed(2)}</strong><span>Live Quotes / Market Data · Finnhub</span></div>
+        <div className="card stock-metric-card"><span className="eyebrow">MARKET CAP</span><strong>{stock.marketCap}</strong><span>Mock Data</span></div>
+        <div className="card stock-metric-card"><span className="eyebrow">PRICE / EARNINGS</span><strong>{stock.peRatio}<small>x</small></strong><span>Mock Data</span></div>
+        <div className="card stock-metric-card"><span className="eyebrow">52 WEEK HIGH</span><strong>{"$" + stock.weekHigh.toFixed(2)}</strong><span>Mock Data</span></div>
+        <div className="card stock-metric-card"><span className="eyebrow">52 WEEK LOW</span><strong>{"$" + stock.weekLow.toFixed(2)}</strong><span>Mock Data</span></div>
       </div>
 
       <section className="card ai-insight-card">

@@ -23,17 +23,17 @@ export function MarketDataStatusMessage({
 
   let message = "";
   if (status === "loading") {
-    message = "Loading live Finnhub quotes; Mock Data is shown until they arrive.";
+    message = "Loading Live Quotes / Market Data from Finnhub; Mock Data is shown until they arrive.";
   } else if (status === "live") {
-    message = "Finnhub quotes · " + updatedLabel;
+    message = "Live Quotes / Market Data · Finnhub · " + updatedLabel;
   } else if (status === "partial") {
     message =
-      "Finnhub unavailable for " +
+      "Live Quotes / Market Data · Finnhub unavailable for " +
       failedSymbols.join(", ") +
       "; showing Mock Data for those symbols. " +
       updatedLabel;
   } else {
-    message = "Finnhub quote request failed; showing Mock Data.";
+    message = "Live Quotes / Market Data unavailable; showing Mock Data.";
   }
 
   return (
@@ -52,21 +52,19 @@ export function MarketDataStatusMessage({
 export function MarketHistoryStatusMessage({
   status,
   failedSymbols,
-  error,
 }: {
   status: "idle" | "loading" | "ready" | "partial" | "error";
   failedSymbols: string[];
-  error: string | null;
 }) {
   if (status === "idle") return null;
 
   const message = status === "loading"
-    ? "Loading real one month Massive price history for charts."
+    ? "Loading Historical Market Data from Massive…"
     : status === "ready"
-      ? "Massive Basic end-of-day history; current quotes come from Finnhub."
-      : "Massive historical price charts unavailable" +
-        (failedSymbols.length ? " for " + failedSymbols.join(", ") : "") +
-        (error ? ": " + error : ".");
+      ? "Historical Market Data · Massive end-of-day prices."
+      : status === "partial"
+        ? "Historical prices are temporarily limited for " + failedSymbols.join(", ") + "; cached real data remains visible where available, and we'll retry automatically."
+        : "Historical prices are temporarily limited. We'll retry automatically.";
 
   return (
     <div className={"market-history-status market-history-status-" + status} role="status" aria-live="polite">

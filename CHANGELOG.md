@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-09-30
+
+- V4.1: load Massive history only for the selected period, share and reuse stock/range requests, and cache verified OHLC in memory plus sessionStorage across route changes and reloads. Use stale real history on rate limits, retry 429 once after a delay, and keep API errors out of ordinary UI copy.
+- Aligned quote and history source labels. Finnhub supplies Current Price, Open, High, Low, and Previous Close; the static Market Cap, P/E, 52 Week High, and 52 Week Low snapshots remain labeled Mock Data.
+
 ## 2026-09-29
 
 - Replaced the Overview / Watchlist mini curves and stock-detail history with real Finnhub candle requests through the Cloudflare Worker. Added 1D, 1W, 1M, 3M, and 1Y range controls; chart colors follow the returned price series, and failures never draw mock history.

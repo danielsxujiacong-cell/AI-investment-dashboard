@@ -89,12 +89,12 @@ export function OverviewPortfolioPerformance() {
     : [];
 
   const quoteLabel = marketData.status === "loading"
-    ? "LOADING QUOTES"
+    ? "LOADING LIVE QUOTES / MARKET DATA"
     : marketData.status === "live"
-      ? "LIVE QUOTES"
+      ? "LIVE QUOTES / MARKET DATA"
       : marketData.status === "partial"
-        ? "PARTIAL QUOTE FALLBACK"
-        : "MOCK QUOTE FALLBACK";
+        ? "PARTIAL MOCK FALLBACK"
+        : "MOCK DATA FALLBACK";
 
   return (
     <section className="overview-card card">

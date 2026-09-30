@@ -123,19 +123,22 @@ function parseMassiveCandles(payload) {
   }).sort((left, right) => left.timestamp - right.timestamp);
 }
 
-async function loadMassiveCandles(env, symbol, interval) {
-  const cacheKey = interval + ":" + symbol;
+async function loadMassiveCandles(env, symbol, range) {
+  const interval = range === "1D" ? "intraday" : "daily";
+  const cacheKey = range + ":" + symbol;
   const cached = historyCache.get(cacheKey);
-  if (cached && cached.expiresAt > Date.now()) return cached.promise;
+  if (cached && (cached.expiresAt > Date.now() || !cached.candles)) return cached.promise;
   if (!env.MASSIVE_API_KEY) {
+    if (cached?.candles) return cached.candles;
     throw Object.assign(new Error("The server-side Massive key is not configured."), { code: "history_not_configured", status: 503 });
   }
   if (!reserveMassiveRequest()) {
+    if (cached?.candles) return cached.candles;
     throw Object.assign(new Error("Massive Stocks Basic allows 5 API calls per minute; cached real history will be available shortly."), { code: "history_rate_limited", status: 429 });
   }
 
   const isIntraday = interval === "intraday";
-  const from = exchangeDateDaysAgo(isIntraday ? 4 : 366);
+  const from = exchangeDateDaysAgo(isIntraday ? 4 : (historyRanges[range] || 366));
   const to = exchangeDate(Date.now());
   const multiplier = isIntraday ? 5 : 1;
   const timespan = isIntraday ? "minute" : "day";
@@ -146,15 +149,17 @@ async function loadMassiveCandles(env, symbol, interval) {
   url.searchParams.set("sort", "asc");
   url.searchParams.set("limit", "50000");
 
-  const ttl = isIntraday ? 30_000 : 300_000;
-  const request = (async () => {
+  const ttl = isIntraday ? 30_000 : 900_000;
+  const staleCandles = cached?.candles || null;
+  let request;
+  request = (async () => {
     try {
       const upstream = await fetch(url.toString(), {
         headers: {
           Accept: "application/json",
           Authorization: "Bearer " + env.MASSIVE_API_KEY,
         },
-        cf: { cacheEverything: true, cacheTtl: isIntraday ? 30 : 300 },
+        cf: { cacheEverything: true, cacheTtl: isIntraday ? 30 : 900 },
       });
       if (upstream.status === 401) {
         throw Object.assign(new Error("Massive rejected the server-side API key."), { code: "history_auth_failed", status: 502 });
@@ -179,12 +184,17 @@ async function loadMassiveCandles(env, symbol, interval) {
       }
       return candles;
     } catch (error) {
+      if (staleCandles) {
+        const fallback = { expiresAt: Date.now() + 30_000, promise: Promise.resolve(staleCandles), candles: staleCandles };
+        historyCache.set(cacheKey, fallback);
+        return staleCandles;
+      }
       if (error && typeof error === "object" && "code" in error) throw error;
       throw Object.assign(new Error("Massive historical prices are temporarily unavailable."), { code: "history_upstream_unavailable", status: 502 });
     }
   })();
 
-  historyCache.set(cacheKey, { expiresAt: Date.now() + ttl, promise: request });
+  historyCache.set(cacheKey, { expiresAt: Date.now() + ttl, promise: request, candles: staleCandles });
   void request.catch(() => {
     if (historyCache.get(cacheKey)?.promise === request) historyCache.delete(cacheKey);
   });
@@ -203,7 +213,7 @@ async function getCandles(request, env, symbol, range) {
   }
 
   try {
-    let candles = await loadMassiveCandles(env, symbol, range === "1D" ? "intraday" : "daily");
+    let candles = await loadMassiveCandles(env, symbol, range);
     if (range === "1D") {
       const latestSession = exchangeDate(candles[candles.length - 1].timestamp);
       candles = candles.filter((candle) => exchangeDate(candle.timestamp) === latestSession);

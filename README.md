@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-**V4 Personal Investment System 已完成。** Portfolio 支持管理个人持仓，并用 Finnhub 当前报价计算市值、成本和未实现盈亏；股票详情可保存个人投资逻辑，Portfolio 可记录投资日志。AI Assistant 仍使用 Mock AI，可读取本机保存的持仓、投资记忆和现有 Watchlist。个人数据保存在当前设备的 localStorage，不会跨设备同步。Finnhub 负责当前报价，Massive 负责历史 OHLC；两个 Key 只由 Cloudflare Worker 服务端读取。Overview、Watchlist 和 Portfolio 使用真实历史收盘价，股票详情显示真实 K 线。免费 Stocks Basic 的历史聚合为 end-of-day 数据，可能比 Finnhub 当前报价晚一个或多个交易时段；页面分别标示数据来源。Key 不存在或历史接口失败时显示明确状态，不绘制 Mock 曲线。
+**V4.1 行情与 K 线稳定性优化已完成。** Portfolio 支持管理个人持仓，并用 Finnhub 当前报价计算市值、成本和未实现盈亏；股票详情可保存个人投资逻辑，Portfolio 可记录投资日志。AI Assistant 仍使用 Mock AI，可读取本机保存的持仓、投资记忆和现有 Watchlist。个人数据保存在当前设备的 localStorage，不会跨设备同步。Finnhub 负责当前报价，Massive 负责历史 OHLC；两个 Key 只由 Cloudflare Worker 服务端读取。Overview、Watchlist 和 Portfolio 使用真实历史收盘价，股票详情按所选周期请求真实 K 线；股票与周期数据在页面间共享，并在当前标签页的 sessionStorage 缓存 15 分钟（1D 缓存 30 秒），过期数据保留并在后台重新验证。遇到限流会优先显示真实缓存并自动延迟重试。免费 Stocks Basic 的历史聚合为 end-of-day 数据，可能比 Finnhub 当前报价晚一个或多个交易时段；页面分别标示数据来源。缺少缓存且历史接口暂不可用时显示友好状态，不绘制 Mock 曲线。
 
 ## 开发阶段
 
@@ -30,8 +30,8 @@
 
 - Dashboard 首页用本地持仓数量与真实历史收盘价计算一个月持仓价值趋势；没有持仓或历史接口不可用时显示空态
 - NVDA、AAPL、TSLA、MSFT、AMZN 的实时行情、关注列表和股票详情；报价保留 Mock Data 回退
-- Overview / Watchlist 的真实一个月 mini chart；详情页提供 Massive 真实 OHLC K 线和 1D / 1W / 1M / 3M / 1Y 周期
-- 行情 Loading、失败状态和 Last updated 时间；历史 API 失败时明确显示错误，不伪造价格曲线
+- Overview / Watchlist 的真实一个月 mini chart；详情页按需请求 Massive 真实 OHLC K 线和 1D / 1W / 1M / 3M / 1Y 周期
+- 行情来源、Loading、限流和 Last updated 状态；历史 API 失败时优先显示真实缓存并自动延迟重试，不伪造价格曲线
 - Light / Dark Mode，首次跟随系统主题并保存用户选择
 - Portfolio 新增、编辑和删除个人持仓；按 Finnhub 当前价格计算市值、成本和未实现盈亏
 - 股票详情中的个人 Investment Memory，以及可新增、编辑和删除的 Investment Notes
@@ -55,7 +55,7 @@ node scripts/start-api-proxy.mjs
 node node_modules/next/dist/bin/next dev
 ```
 
-然后访问 http://localhost:3000。Finnhub 报价失败时会显示 Mock Data 回退；Massive 历史 candles 失败时不会画模拟曲线，而会显示 API 错误。
+然后访问 http://localhost:3000。Finnhub 报价失败时会显示 Mock Data 回退；Massive 历史 candles 受限时会保留最近的真实缓存，未命中缓存时显示友好状态并延迟重试，不画模拟曲线。
 
 ## 行情代理部署
 

@@ -45,7 +45,7 @@ export function WatchlistExplorer() {
           <div className="empty-search"><Icon name="search" size={20} /><p>No matches for “{query}”</p><span>Try another symbol or company name.</span></div>
         )}
         <div className="watchlist-note">
-          <MarketHistoryStatusMessage status={marketData.historyStatus} failedSymbols={marketData.failedHistorySymbols} error={marketData.historyError} />
+          <MarketHistoryStatusMessage status={marketData.historyStatus} failedSymbols={marketData.failedHistorySymbols} />
           <MarketDataStatusMessage
             status={marketData.status}
             failedSymbols={marketData.failedSymbols}

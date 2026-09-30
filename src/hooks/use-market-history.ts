@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
+  getCachedHistoricalPrices,
   getHistoricalPrices,
   type HistoricalPricePoint,
   type MarketHistoryRange,
@@ -22,23 +23,38 @@ export function useMarketHistory(symbol: string, range: MarketHistoryRange): Mar
 
   useEffect(() => {
     let cancelled = false;
-    setResult({ status: "loading", points: [], error: null });
+    const cachedPoints = getCachedHistoricalPrices(symbol, range);
+    setResult(cachedPoints
+      ? { status: "ready", points: cachedPoints, error: null }
+      : { status: "loading", points: [], error: null });
+    const handleRateLimit = (event: Event) => {
+      const detail = (event as CustomEvent<{ symbol: string; range: MarketHistoryRange }>).detail;
+      if (!cancelled && !cachedPoints && detail?.symbol === symbol && detail.range === range) {
+        setResult({
+          status: "error",
+          points: [],
+          error: "Historical prices are temporarily limited. We'll retry automatically.",
+        });
+      }
+    };
+    window.addEventListener("market-history-rate-limited", handleRateLimit);
     void getHistoricalPrices(symbol, range).then(
       (points) => {
         if (!cancelled) setResult({ status: "ready", points, error: null });
       },
-      (error: unknown) => {
+      () => {
         if (!cancelled) {
           setResult({
-            status: "error",
-            points: [],
-            error: error instanceof Error ? error.message : "Historical price request failed.",
+            status: cachedPoints ? "ready" : "error",
+            points: cachedPoints ?? [],
+            error: cachedPoints ? null : "Historical prices are temporarily limited. We'll retry automatically.",
           });
         }
       },
     );
     return () => {
       cancelled = true;
+      window.removeEventListener("market-history-rate-limited", handleRateLimit);
     };
   }, [symbol, range]);
 
