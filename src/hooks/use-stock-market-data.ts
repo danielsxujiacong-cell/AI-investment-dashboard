@@ -21,6 +21,7 @@ type QuoteResult = {
 
 type MarketDataState = {
   stocks: Stock[];
+  liveQuotes: Record<string, LiveStockQuote>;
   status: MarketDataStatus;
   failedSymbols: string[];
   lastUpdated: number | null;
@@ -181,6 +182,7 @@ export function useStockMarketData(includeHistory = false): MarketDataState {
 
   return {
     stocks: mergedStocks,
+    liveQuotes: quotes,
     status,
     failedSymbols,
     lastUpdated,

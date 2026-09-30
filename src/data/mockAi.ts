@@ -1,4 +1,4 @@
-// Keep the mock response layer until STEP 3 is resumed with OPENAI_API_KEY configured.
+// Keep this lightweight response layer for when the configured AI API is unavailable.
 import type { InvestmentMemory, PortfolioHolding } from "@/data/personal-data";
 
 export type MockAiPersonalContext = {

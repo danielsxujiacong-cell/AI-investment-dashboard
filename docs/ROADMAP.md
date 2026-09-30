@@ -24,9 +24,9 @@ V1–V3 现有产品结构保留，AI Assistant 继续使用 Mock AI，待以后
 
 已完成可编辑的本地持仓、基于 Finnhub 行情的持仓估值与未实现盈亏、每只股票的 Investment Memory、Investment Notes，以及引用这些本机数据的 Mock AI Personal Context。数据保存在当前设备的 localStorage，不跨设备同步；V4 不接入 OpenAI API、Supabase、登录或自动交易。
 
-## STEP 3：OpenAI API（待以后配置）
+## V5 第一阶段：国产 OpenAI-Compatible AI API
 
-暂不接入 OpenAI API。保留当前 Mock AI 页面与回复逻辑；以后配置 OPENAI_API_KEY 后再继续。
+已完成通用 Worker Chat Completions 路由、个人上下文装配、Thinking / API unavailable / 模型状态和 Mock fallback。默认候选配置为百炼北京端 `qwen-plus`。下一步由用户在百炼控制台创建 Key，将其安全配置为 Worker Secret，然后进行三条真实上下文对话和线上验收。
 
 ## STEP 5：用户系统和数据库
 

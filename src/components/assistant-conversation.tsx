@@ -5,8 +5,11 @@ import { getMockAiResponse } from "@/data/mockAi";
 import { usePersonalData } from "@/components/personal-data-provider";
 import { stocks } from "@/data/stocks";
 import { Icon } from "@/components/icons";
+import { useStockMarketData } from "@/hooks/use-stock-market-data";
+import { marketApiUrl } from "@/data/market-api";
 
-type Message = { id: number; role: "assistant" | "user"; text: string };
+type Message = { id: number; role: "assistant" | "user"; text: string; source?: "ai" | "mock" };
+type AssistantStatus = { checked: boolean; available: boolean; model: string | null };
 
 const quickQuestions = [
   "Analyze NVDA",
@@ -17,8 +20,10 @@ const quickQuestions = [
 
 export function AssistantConversation() {
   const { data, ready, storageAvailable } = usePersonalData();
+  const marketData = useStockMarketData();
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
+  const [assistantStatus, setAssistantStatus] = useState<AssistantStatus>({ checked: false, available: false, model: null });
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 0,
@@ -39,21 +44,101 @@ export function AssistantConversation() {
     if (prompt) setDraft(prompt);
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    fetch(marketApiUrl("/api/assistant/status"), { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("AI status is unavailable.");
+        return response.json() as Promise<{ available?: boolean; model?: string | null }>;
+      })
+      .then((status) => {
+        if (!cancelled) setAssistantStatus({
+          checked: true,
+          available: status.available === true,
+          model: typeof status.model === "string" ? status.model : null,
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setAssistantStatus({ checked: true, available: false, model: null });
+      });
+    return () => { cancelled = true; };
+  }, []);
+
   useEffect(() => () => {
     if (timer.current) clearTimeout(timer.current);
   }, []);
 
-  function ask(question: string) {
+  async function ask(question: string) {
     const prompt = question.trim();
-    if (!prompt || pending) return;
+    if (!prompt || pending || !ready) return;
 
     const userId = nextId.current++;
     const assistantId = nextId.current++;
+    const history = messages.filter((message) => message.id > 0).slice(-10).map((message) => ({
+      role: message.role,
+      content: message.text,
+    }));
     setMessages((current) => [...current, { id: userId, role: "user", text: prompt }]);
     setDraft("");
     setPending(true);
 
-    timer.current = setTimeout(() => {
+    try {
+      const response = await fetch(marketApiUrl("/api/assistant"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        signal: AbortSignal.timeout(30_000),
+        body: JSON.stringify({
+          question: prompt,
+          history,
+          context: {
+            watchlist: stocks.map((stock) => ({
+              symbol: stock.symbol,
+              name: stock.name,
+              sector: stock.sector,
+              latestFinnhubQuote: marketData.liveQuotes[stock.symbol] ?? null,
+            })),
+            portfolio: data.portfolio.map((holding) => {
+              const quote = marketData.liveQuotes[holding.symbol];
+              const marketValue = quote ? holding.shares * quote.price : null;
+              const costBasis = holding.shares * holding.averageCost;
+              return {
+                ...holding,
+                currentPrice: quote?.price ?? null,
+                dailyChange: quote?.change ?? null,
+                dailyChangePercent: quote?.changePercent ?? null,
+                quoteUpdatedAt: quote?.updatedAt ?? null,
+                marketValue,
+                costBasis,
+                unrealizedGainLoss: marketValue === null ? null : marketValue - costBasis,
+              };
+            }),
+            marketDataSource: "Finnhub",
+            marketDataStatus: marketData.status,
+            latestFinnhubQuotes: marketData.liveQuotes,
+            investmentMemory: data.investmentMemory,
+            investmentNotes: data.investmentNotes,
+          },
+        }),
+      });
+      if (!response.ok) throw new Error("AI service is unavailable (" + response.status + ").");
+      const result = await response.json() as { answer?: unknown; model?: unknown };
+      const answer = result.answer;
+      if (typeof answer !== "string" || !answer.trim()) throw new Error("AI service returned an empty response.");
+
+      setMessages((current) => [...current, {
+        id: assistantId,
+        role: "assistant",
+        text: answer,
+        source: "ai",
+      }]);
+      setAssistantStatus((current) => ({
+        checked: true,
+        available: true,
+        model: typeof result.model === "string" ? result.model : current.model,
+      }));
+    } catch {
+      setAssistantStatus((current) => ({ ...current, checked: true, available: false }));
       setMessages((current) => [...current, {
         id: assistantId,
         role: "assistant",
@@ -61,10 +146,12 @@ export function AssistantConversation() {
           portfolio: data.portfolio,
           investmentMemory: data.investmentMemory,
           watchlistSymbols: stocks.map((stock) => stock.symbol),
-        }),
+        }) + "\n\nThe AI API is unavailable, so this is a Mock fallback response.",
+        source: "mock",
       }]);
+    } finally {
       setPending(false);
-    }, 720);
+    }
   }
 
   return (
@@ -80,8 +167,8 @@ export function AssistantConversation() {
 
       <section className="card personal-context-card" aria-label="Personal Context">
         <div className="panel-heading">
-          <div><span className="eyebrow">AVAILABLE TO MOCK AI</span><h2>Personal Context</h2></div>
-          <span className="mock-label"><i /> LOCAL ONLY</span>
+          <div><span className="eyebrow">AVAILABLE TO AI ON REQUEST</span><h2>Personal Context</h2></div>
+          <span className="mock-label"><i /> ON DEVICE</span>
         </div>
         {!ready ? <p className="context-empty">Loading your saved context…</p> : (
           <div className="personal-context-grid">
@@ -123,12 +210,12 @@ export function AssistantConversation() {
             </div>
           </div>
         )}
-        <p className="personal-data-notice">Personal data is stored locally on this device.{!storageAvailable ? " Local storage is unavailable; changes last for this visit." : ""}</p>
+        <p className="personal-data-notice">Personal data is stored locally on this device.{!storageAvailable ? " Local storage is unavailable; changes last for this visit." : ""} When you send a message, its question and investment context are sent to the configured AI service through the Worker.</p>
       </section>
 
       <div className="quick-prompts">
         {quickQuestions.map((question, index) => (
-          <button key={question} type="button" className={"prompt-chip prompt-chip-" + index} onClick={() => ask(question)} disabled={pending}>
+          <button key={question} type="button" className={"prompt-chip prompt-chip-" + index} onClick={() => ask(question)} disabled={pending || !ready}>
             <span className={"prompt-chip-icon prompt-" + index}><Icon name={index === 0 ? "activity" : index === 1 ? "shield" : index === 2 ? "watchlist" : "overview"} size={15} /></span>
             {question}
           </button>
@@ -138,15 +225,15 @@ export function AssistantConversation() {
       <section className="card conversation-card" aria-label="AI conversation">
         <div className="conversation-header">
           <div className="conversation-agent-mark"><Icon name="sparkles" size={16} /></div>
-          <div><strong>Investment assistant</strong><span>Mock research mode</span></div>
-          <div className="conversation-model"><i /> MOCK AI</div>
+          <div><strong>Investment assistant</strong><span>{assistantStatus.available ? "AI API · contextual research" : "On-device Mock fallback"}</span></div>
+          <div className="conversation-model"><i />{pending ? "THINKING…" : assistantStatus.available ? assistantStatus.model || "AI API" : assistantStatus.checked ? "API UNAVAILABLE · MOCK" + (assistantStatus.model ? " · " + assistantStatus.model : "") : "CHECKING API…"}</div>
         </div>
         <div className="conversation-messages" role="log" aria-live="polite">
           {messages.map((message) => (
             <div key={message.id} className={"message-row " + message.role}>
               {message.role === "assistant" && <div className="message-avatar"><Icon name="sparkles" size={15} /></div>}
               <div className="message-bubble">
-                {message.role === "assistant" && <span className="message-label">NORTHSTAR AI</span>}
+                {message.role === "assistant" && <span className="message-label">{message.source === "mock" ? "MOCK FALLBACK" : message.source === "ai" ? assistantStatus.model || "AI ASSISTANT" : "NORTHSTAR AI"}</span>}
                 <p>{message.text}</p>
               </div>
               {message.role === "user" && <div className="message-user-avatar">B</div>}
@@ -155,17 +242,17 @@ export function AssistantConversation() {
           {pending && (
             <div className="message-row assistant">
               <div className="message-avatar"><Icon name="sparkles" size={15} /></div>
-              <div className="message-bubble typing-bubble" aria-label="Assistant is thinking"><span /><span /><span /></div>
+              <div className="message-bubble typing-bubble" aria-label="Thinking…"><span /><span /><span /><small>Thinking…</small></div>
             </div>
           )}
           <div ref={bottomRef} />
         </div>
         <form className="chat-composer" onSubmit={(event) => { event.preventDefault(); ask(draft); }}>
           <input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Ask anything about your investments..." aria-label="Message the AI assistant" />
-          <span className="composer-hint">MOCK DATA</span>
-          <button type="submit" aria-label="Send message" disabled={!draft.trim() || pending}><Icon name="send" size={17} /></button>
+          <span className="composer-hint">{marketData.status === "live" || marketData.status === "partial" ? "FINNHUB QUOTES" : "QUOTES UNAVAILABLE"}</span>
+          <button type="submit" aria-label="Send message" disabled={!draft.trim() || pending || !ready}><Icon name="send" size={17} /></button>
         </form>
-        <p className="assistant-disclaimer">Replies are simulated and may reference the personal context shown above. No external AI service is used.</p>
+        <p className="assistant-disclaimer">AI responses may be inaccurate and are for research only. Mock fallback responses are simulated; no trades are placed.</p>
       </section>
     </div>
   );

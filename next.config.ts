@@ -24,6 +24,14 @@ const nextConfig: NextConfig = {
             source: "/api/market/candles/:symbol",
             destination: "http://127.0.0.1:8787/api/market/candles/:symbol",
           },
+          {
+            source: "/api/assistant/status",
+            destination: "http://127.0.0.1:8787/api/assistant/status",
+          },
+          {
+            source: "/api/assistant",
+            destination: "http://127.0.0.1:8787/api/assistant",
+          },
         ]
       : undefined,
 };
