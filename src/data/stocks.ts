@@ -1,6 +1,8 @@
 export type Stock = {
   symbol: string;
   name: string;
+  exchange?: string | null;
+  market?: string;
   sector: string;
   price: number;
   change: number;

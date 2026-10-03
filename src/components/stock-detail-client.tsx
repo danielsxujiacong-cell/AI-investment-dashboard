@@ -12,7 +12,7 @@ import { formatHistoryTimestamp, marketHistoryRanges, type MarketHistoryRange } 
 import type { Stock } from "@/data/stocks";
 
 export function StockDetailClient({ initialStock }: { initialStock: Stock }) {
-  const marketData = useStockMarketData();
+  const marketData = useStockMarketData({ activeStock: initialStock });
   const stock = marketData.stocks.find((item) => item.symbol === initialStock.symbol) ?? initialStock;
   const [range, setRange] = useState<MarketHistoryRange>("1M");
   const historical = useMarketHistory(stock.symbol, range);
@@ -38,10 +38,10 @@ export function StockDetailClient({ initialStock }: { initialStock: Stock }) {
       <div className="stock-detail-heading">
         <div className="stock-detail-identity">
           <div className={"stock-detail-monogram monogram-" + stock.symbol}>{stock.symbol.slice(0, 1)}</div>
-          <div><div className="stock-symbol-line"><h1>{stock.symbol}</h1><span className="sector-chip">{stock.sector}</span></div><p>{stock.name}</p></div>
+          <div><div className="stock-symbol-line"><h1>{stock.symbol}</h1><span className="sector-chip">{stock.exchange || stock.sector}</span></div><p>{stock.name}</p></div>
         </div>
         <div className="stock-detail-price">
-          <strong>{"$" + stock.price.toFixed(2)}</strong>
+          <strong>{stock.price > 0 ? "$" + stock.price.toFixed(2) : "—"}</strong>
           <span className={quotePositive ? "positive-text" : "negative-text"}>{quotePositive ? "+" : ""}{stock.change.toFixed(2)} ({quotePositive ? "+" : ""}{stock.changePercent.toFixed(2)}%) today</span>
           <MarketDataStatusMessage
             status={marketData.status}
@@ -70,7 +70,7 @@ export function StockDetailClient({ initialStock }: { initialStock: Stock }) {
           </div>
         </div>
         <div className="stock-chart-value">
-          <span>{"$" + stock.price.toFixed(2)}</span>
+          <span>{stock.price > 0 ? "$" + stock.price.toFixed(2) : "—"}</span>
           <span className={chartPositive === undefined ? "" : chartPositive ? "positive-text" : "negative-text"}>
             {rangePercent === null ? "—" : (rangePercent >= 0 ? "+" : "") + rangePercent.toFixed(2) + "%"} {range}
           </span>
@@ -89,14 +89,14 @@ export function StockDetailClient({ initialStock }: { initialStock: Stock }) {
       </section>
 
       <div className="stock-metric-grid">
-        <div className="card stock-metric-card"><span className="eyebrow">OPEN</span><strong>{"$" + stock.open.toFixed(2)}</strong><span>Live Quotes / Market Data · Finnhub</span></div>
-        <div className="card stock-metric-card"><span className="eyebrow">HIGH</span><strong>{"$" + stock.high.toFixed(2)}</strong><span>Live Quotes / Market Data · Finnhub</span></div>
-        <div className="card stock-metric-card"><span className="eyebrow">LOW</span><strong>{"$" + stock.low.toFixed(2)}</strong><span>Live Quotes / Market Data · Finnhub</span></div>
-        <div className="card stock-metric-card"><span className="eyebrow">PREVIOUS CLOSE</span><strong>{"$" + stock.previousClose.toFixed(2)}</strong><span>Live Quotes / Market Data · Finnhub</span></div>
+        <div className="card stock-metric-card"><span className="eyebrow">OPEN</span><strong>{stock.open > 0 ? "$" + stock.open.toFixed(2) : "—"}</strong><span>Live Quotes / Market Data · Finnhub</span></div>
+        <div className="card stock-metric-card"><span className="eyebrow">HIGH</span><strong>{stock.high > 0 ? "$" + stock.high.toFixed(2) : "—"}</strong><span>Live Quotes / Market Data · Finnhub</span></div>
+        <div className="card stock-metric-card"><span className="eyebrow">LOW</span><strong>{stock.low > 0 ? "$" + stock.low.toFixed(2) : "—"}</strong><span>Live Quotes / Market Data · Finnhub</span></div>
+        <div className="card stock-metric-card"><span className="eyebrow">PREVIOUS CLOSE</span><strong>{stock.previousClose > 0 ? "$" + stock.previousClose.toFixed(2) : "—"}</strong><span>Live Quotes / Market Data · Finnhub</span></div>
         <div className="card stock-metric-card"><span className="eyebrow">MARKET CAP</span><strong>{stock.marketCap}</strong><span>Mock Data</span></div>
         <div className="card stock-metric-card"><span className="eyebrow">PRICE / EARNINGS</span><strong>{stock.peRatio}<small>x</small></strong><span>Mock Data</span></div>
-        <div className="card stock-metric-card"><span className="eyebrow">52 WEEK HIGH</span><strong>{"$" + stock.weekHigh.toFixed(2)}</strong><span>Mock Data</span></div>
-        <div className="card stock-metric-card"><span className="eyebrow">52 WEEK LOW</span><strong>{"$" + stock.weekLow.toFixed(2)}</strong><span>Mock Data</span></div>
+        <div className="card stock-metric-card"><span className="eyebrow">52 WEEK HIGH</span><strong>{stock.weekHigh > 0 ? "$" + stock.weekHigh.toFixed(2) : "—"}</strong><span>Mock Data</span></div>
+        <div className="card stock-metric-card"><span className="eyebrow">52 WEEK LOW</span><strong>{stock.weekLow > 0 ? "$" + stock.weekLow.toFixed(2) : "—"}</strong><span>Mock Data</span></div>
       </div>
 
       <section className="card ai-insight-card">

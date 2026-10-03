@@ -1,6 +1,7 @@
-const allowedSymbols = new Set(["NVDA", "AAPL", "TSLA", "MSFT", "AMZN"]);
 const rateBuckets = new Map();
 const historyCache = new Map();
+const tickerPageCache = new Map();
+const tickerPageRequests = new Map();
 const massiveRequestTimes = [];
 
 function allowedOrigins(env) {
@@ -26,7 +27,7 @@ function corsHeaders(request, env) {
   };
 }
 
-function jsonResponse(request, env, payload, status = 200) {
+function jsonResponse(request, env, payload, status = 200, extraHeaders = {}) {
   const headers = corsHeaders(request, env);
   if (!headers) {
     return new Response(JSON.stringify({ error: "Origin is not allowed." }), {
@@ -37,8 +38,12 @@ function jsonResponse(request, env, payload, status = 200) {
 
   return new Response(JSON.stringify(payload), {
     status,
-    headers: { ...headers, "Content-Type": "application/json; charset=utf-8" },
+    headers: { ...headers, ...extraHeaders, "Content-Type": "application/json; charset=utf-8" },
   });
+}
+
+function isValidStockSymbol(symbol) {
+  return /^[A-Z][A-Z0-9.-]{0,14}$/.test(symbol);
 }
 
 function isRateLimited(request, limit) {
@@ -202,8 +207,185 @@ async function loadMassiveCandles(env, symbol, range) {
   return request;
 }
 
+const TICKER_DIRECTORY_TTL = 6 * 60 * 60_000;
+const TICKER_DIRECTORY_HEADERS = {
+  "Cache-Control": "public, max-age=300, s-maxage=21600, stale-while-revalidate=3600",
+};
+
+function tickerPageCacheKey(search, cursor, limit) {
+  const keyUrl = new URL("https://ticker-cache.ai-investment-dashboard.invalid/v2/stocks");
+  if (search) keyUrl.searchParams.set("search", search);
+  if (cursor) keyUrl.searchParams.set("cursor", cursor);
+  keyUrl.searchParams.set("limit", String(limit));
+  return keyUrl.toString();
+}
+
+function getTickerPageCursor(nextUrl) {
+  if (typeof nextUrl !== "string") return null;
+  try {
+    const parsed = new URL(nextUrl);
+    if (parsed.hostname !== "api.massive.com") return null;
+    const cursor = parsed.searchParams.get("cursor");
+    return cursor && cursor.length <= 4_096 ? cursor : null;
+  } catch {
+    return null;
+  }
+}
+
+function cacheTickerPage(cacheKey, payload) {
+  if (!tickerPageCache.has(cacheKey) && tickerPageCache.size >= 500) {
+    const oldestKey = tickerPageCache.keys().next().value;
+    if (oldestKey) tickerPageCache.delete(oldestKey);
+  }
+  tickerPageCache.set(cacheKey, { expiresAt: Date.now() + TICKER_DIRECTORY_TTL, payload });
+}
+
+async function loadMassiveTickerPage(env, search, cursor, limit) {
+  const cacheKey = tickerPageCacheKey(search, cursor, limit);
+  const cachedMemory = tickerPageCache.get(cacheKey);
+  if (cachedMemory && cachedMemory.expiresAt > Date.now()) return cachedMemory.payload;
+
+  const edgeCache = typeof caches !== "undefined" ? caches.default : null;
+  const cacheRequest = new Request(cacheKey);
+  if (edgeCache) {
+    try {
+      const cachedResponse = await edgeCache.match(cacheRequest);
+      if (cachedResponse) {
+        const payload = await cachedResponse.json();
+        cacheTickerPage(cacheKey, payload);
+        return payload;
+      }
+    } catch {
+      // Continue to the in-memory cache and upstream when edge cache is unavailable.
+    }
+  }
+
+  const pending = tickerPageRequests.get(cacheKey);
+  if (pending) return pending;
+  if (!env.MASSIVE_API_KEY) {
+    throw Object.assign(new Error("The server-side Massive key is not configured."), { code: "ticker_not_configured", status: 503 });
+  }
+  if (!reserveMassiveRequest()) {
+    throw Object.assign(new Error("Massive Stocks Basic allows 5 API calls per minute. Cached stock results remain available; retry shortly for a new search."), { code: "ticker_rate_limited", status: 429 });
+  }
+
+  let request;
+  request = (async () => {
+    const url = new URL("https://api.massive.com/v3/reference/tickers");
+    if (cursor) {
+      // Massive encodes the original filters and sort in its opaque cursor.
+      url.searchParams.set("cursor", cursor);
+    } else {
+      url.searchParams.set("market", "stocks");
+      url.searchParams.set("locale", "us");
+      url.searchParams.set("type", "CS");
+      url.searchParams.set("active", "true");
+      url.searchParams.set("order", "asc");
+      url.searchParams.set("limit", String(limit));
+      url.searchParams.set("sort", "ticker");
+      if (search) url.searchParams.set("search", search);
+    }
+
+    let upstream;
+    try {
+      upstream = await fetch(url.toString(), {
+        headers: {
+          Accept: "application/json",
+          Authorization: "Bearer " + env.MASSIVE_API_KEY,
+        },
+      });
+    } catch {
+      throw Object.assign(new Error("Massive stock reference data is temporarily unavailable."), { code: "ticker_upstream_unavailable", status: 502 });
+    }
+    if (upstream.status === 401) {
+      throw Object.assign(new Error("Massive rejected the server-side API key."), { code: "ticker_auth_failed", status: 502 });
+    }
+    if (upstream.status === 403) {
+      throw Object.assign(new Error("Massive denied access to stock reference data for this account."), { code: "ticker_plan_restricted", status: 403 });
+    }
+    if (upstream.status === 429) {
+      throw Object.assign(new Error("Massive API rate limit reached. Retry after the free-plan minute window resets."), { code: "ticker_rate_limited", status: 429 });
+    }
+    if (!upstream.ok) {
+      throw Object.assign(new Error("Massive stock reference request failed (" + upstream.status + ")."), { code: "ticker_request_failed", status: 502 });
+    }
+
+    const source = await upstream.json();
+    const results = Array.isArray(source?.results) ? source.results.flatMap((item) => {
+      if (!isRecord(item) || typeof item.ticker !== "string" || !isValidStockSymbol(item.ticker.toUpperCase())) return [];
+      return [{
+        symbol: item.ticker.toUpperCase(),
+        name: typeof item.name === "string" ? item.name : item.ticker.toUpperCase(),
+        market: typeof item.market === "string" ? item.market : "stocks",
+        exchange: typeof item.primary_exchange === "string" ? item.primary_exchange : null,
+      }];
+    }) : [];
+    if (search) {
+      const normalizedSearch = search.toUpperCase();
+      const relevance = (item) => {
+        const symbol = item.symbol.toUpperCase();
+        const name = item.name.toUpperCase();
+        if (symbol === normalizedSearch) return 0;
+        if (symbol.startsWith(normalizedSearch)) return 1;
+        if (name.startsWith(normalizedSearch)) return 2;
+        if (symbol.includes(normalizedSearch)) return 3;
+        return 4;
+      };
+      results.sort((left, right) => relevance(left) - relevance(right) || left.symbol.localeCompare(right.symbol));
+    }
+    const payload = {
+      results,
+      count: results.length,
+      nextCursor: getTickerPageCursor(source?.next_url),
+    };
+
+    cacheTickerPage(cacheKey, payload);
+    if (edgeCache) {
+      try {
+        await edgeCache.put(cacheRequest, new Response(JSON.stringify(payload), {
+          headers: { "Content-Type": "application/json; charset=utf-8", ...TICKER_DIRECTORY_HEADERS },
+        }));
+      } catch {
+        // The response and in-memory cache still work when edge storage is unavailable.
+      }
+    }
+    return payload;
+  })().finally(() => tickerPageRequests.delete(cacheKey));
+
+  tickerPageRequests.set(cacheKey, request);
+  return request;
+}
+
+async function getStockDirectory(request, env, search, cursor, limit) {
+  if (search.length > 60) {
+    return jsonResponse(request, env, { error: "Search text must be 60 characters or fewer." }, 400);
+  }
+  if (search.length === 1) {
+    return jsonResponse(request, env, { error: "Enter at least 2 characters to search." }, 400);
+  }
+  if (cursor && (cursor.length > 4_096 || !/^[A-Za-z0-9_~.+/=-]+$/.test(cursor))) {
+    return jsonResponse(request, env, { error: "Invalid stock directory page cursor." }, 400);
+  }
+  if (!Number.isInteger(limit) || limit < 1 || limit > 1_000) {
+    return jsonResponse(request, env, { error: "The stock directory page size must be between 1 and 1,000." }, 400);
+  }
+  if (isRateLimited(request, 30)) {
+    return jsonResponse(request, env, { error: "Too many stock searches. Please retry shortly." }, 429);
+  }
+
+  try {
+    const payload = await loadMassiveTickerPage(env, search, cursor, limit);
+    return jsonResponse(request, env, payload, 200, TICKER_DIRECTORY_HEADERS);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Massive stock reference data is temporarily unavailable.";
+    const code = error && typeof error === "object" && "code" in error ? error.code : "ticker_upstream_unavailable";
+    const status = error && typeof error === "object" && "status" in error ? error.status : 502;
+    return jsonResponse(request, env, { error: message, code }, status);
+  }
+}
+
 async function getCandles(request, env, symbol, range) {
-  if (!allowedSymbols.has(symbol)) {
+  if (!isValidStockSymbol(symbol)) {
     return jsonResponse(request, env, { error: "Unsupported stock symbol." }, 404);
   }
   if (range !== "1D" && !Object.hasOwn(historyRanges, range)) {
@@ -239,7 +421,7 @@ async function getCandles(request, env, symbol, range) {
 }
 
 async function getQuote(request, env, symbol) {
-  if (!allowedSymbols.has(symbol)) {
+  if (!isValidStockSymbol(symbol)) {
     return jsonResponse(request, env, { error: "Unsupported stock symbol." }, 404);
   }
   if (!env.FINNHUB_API_KEY) {
@@ -557,12 +739,19 @@ export default {
       return postAssistant(request, env);
     }
 
-    const candlesMatch = url.pathname.match(/^\/api\/market\/candles\/([A-Za-z]+)$/);
+    if (request.method === "GET" && url.pathname === "/api/market/stocks") {
+      const search = (url.searchParams.get("search") || "").trim();
+      const cursor = url.searchParams.get("cursor") || "";
+      const requestedLimit = url.searchParams.has("limit") ? Number(url.searchParams.get("limit")) : 100;
+      return getStockDirectory(request, env, search, cursor, requestedLimit);
+    }
+
+    const candlesMatch = url.pathname.match(/^\/api\/market\/candles\/([A-Za-z0-9.-]+)$/);
     if (request.method === "GET" && candlesMatch) {
       return getCandles(request, env, candlesMatch[1].toUpperCase(), url.searchParams.get("range") || "");
     }
 
-    const quoteMatch = url.pathname.match(/^\/api\/market\/quote\/([A-Za-z]+)$/);
+    const quoteMatch = url.pathname.match(/^\/api\/market\/quote\/([A-Za-z0-9.-]+)$/);
     if (request.method === "GET" && quoteMatch) {
       return getQuote(request, env, quoteMatch[1].toUpperCase());
     }

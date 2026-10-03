@@ -266,6 +266,54 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .empty-search span { color: #757d87; font-size: 9px; }
 .watchlist-page-footnote { display: flex; align-items: center; gap: 8px; color: #727a83; font-size: 9px; }
 .watchlist-page-footnote span { color: #a4b9a8; font-size: 14px; }
+.stock-universe-layout { display: grid; gap: 22px; }
+.stock-universe-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.stock-universe-section-heading h2 { margin: 5px 0 0; color: #e3e7e3; font-size: 18px; font-weight: 570; letter-spacing: -.035em; }
+.stock-universe-section-heading p { margin: 6px 0 0; color: #818993; font-size: 10px; }
+.stock-watchlist-card { padding: 18px 20px 13px; }
+.stock-watchlist-list { margin-top: 13px; }
+.stock-managed-row { display: grid; min-height: 64px; grid-template-columns: minmax(0,1fr) 115px 64px; align-items: center; gap: 16px; border-bottom: 1px solid rgba(226,232,239,.06); }
+.stock-managed-row:last-child { border-bottom: 0; }
+.stock-managed-identity { display: flex; min-width: 0; align-items: center; gap: 11px; }
+.stock-managed-identity .stock-name-wrap { min-width: 0; }
+.stock-managed-identity .stock-name-wrap>span { max-width: 100%; }
+.stock-managed-price { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.stock-managed-price strong { color: #d8dfda; font-size: 11px; font-weight: 560; }
+.stock-managed-price span { font-size: 9px; }
+.stock-watchlist-note { margin: 11px 0 0; color: #767f89; font-size: 9px; }
+.stock-universe-empty,.stock-directory-empty,.stock-directory-error { display: grid; min-height: 75px; align-content: center; padding: 14px 4px; color: #838b95; font-size: 10px; }
+.stock-directory-error { color: #d0a08b; }
+.stock-discover-section,.stock-featured-section { display: grid; gap: 13px; }
+.stock-discover-toolbar { margin: 0; }
+.stock-directory-card { overflow: hidden; padding: 0 20px 14px; }
+.stock-directory-heading { display: flex; min-height: 42px; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); color: #747d87; font-size: 9px; }
+.stock-directory-heading span:first-child { color: #c5ccc7; font-size: 10px; font-weight: 570; }
+.stock-directory-list { display: grid; }
+.stock-directory-row { display: grid; min-height: 59px; grid-template-columns: minmax(0,1fr) 102px 150px; align-items: center; gap: 16px; border-bottom: 1px solid rgba(226,232,239,.055); }
+.stock-directory-row:last-child { border-bottom: 0; }
+.stock-directory-identity { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.stock-directory-identity strong { color: #dfe4e0; font-size: 10px; font-weight: 600; }
+.stock-directory-identity span { overflow: hidden; color: #858d96; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.stock-directory-market { display: flex; flex-direction: column; gap: 2px; color: #adb5af; font-size: 9px; }
+.stock-directory-market small { color: #68717c; font-size: 7px; letter-spacing: .08em; }
+.stock-action-add,.stock-action-remove { display: inline-flex; min-height: 30px; align-items: center; justify-content: center; gap: 5px; padding: 0 9px; border: 1px solid var(--line-strong); border-radius: 8px; color: #bbc5bd; background: rgba(255,255,255,.025); font-size: 8px; font-weight: 550; white-space: nowrap; cursor: pointer; transition: .18s ease; }
+.stock-action-add:hover { border-color: rgba(145,190,153,.3); color: #d2e0d4; background: rgba(126,170,133,.09); }
+.stock-action-remove { min-height: 28px; color: #89929c; }
+.stock-action-remove:hover { border-color: rgba(205,130,116,.28); color: #d5a69b; background: rgba(190,105,90,.07); }
+.stock-added-actions { display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.stock-added-label { color: #92c29c; font-size: 8px; }
+.stock-directory-more { display: flex; width: 100%; min-height: 38px; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 9px; color: #aab7ad; background: transparent; font-size: 9px; cursor: pointer; }
+.stock-directory-more:hover:not(:disabled) { color: #d1e0d4; background: rgba(126,170,133,.07); }
+.stock-directory-more:disabled { cursor: wait; opacity: .55; }
+.stock-featured-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
+.stock-featured-card { display: flex; min-width: 0; flex-direction: column; gap: 10px; padding: 13px; }
+.stock-featured-link { display: flex; min-width: 0; align-items: center; gap: 9px; }
+.stock-featured-link>span:nth-child(2) { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 3px; }
+.stock-featured-link strong { color: #dde3de; font-size: 10px; font-weight: 600; }
+.stock-featured-link small { overflow: hidden; color: #828a94; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.stock-featured-link>svg { flex: 0 0 auto; color: #68747d; }
+.stock-featured-card .stock-action-add,.stock-featured-card .stock-added-actions { align-self: flex-start; }
+.stock-universe-detail-message { color: #8c949c; font-size: 12px; }
 
 .portfolio-stat-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 15px; }
 .portfolio-stat-card { display: flex; min-height: 142px; flex-direction: column; align-items: flex-start; justify-content: center; gap: 10px; padding: 20px 22px; }
@@ -485,6 +533,7 @@ a.holding-row:hover { background: rgba(255,255,255,.025); }
   .dashboard-bottom-line>div>div { gap: 4px; }
   .bottom-line-action { display: none; }
   .watchlist-page-badge,.portfolio-asof,.assistant-mode { gap: 6px; padding: 6px 7px; font-size: 7px; }
+  .page-heading-stock-universe { align-items: flex-start; flex-direction: column; gap: 10px; }
   .watchlist-toolbar { align-items: flex-start; flex-direction: column; }
   .search-field { width: 100%; }
   .watchlist-count { padding-left: 2px; }
@@ -496,6 +545,38 @@ a.holding-row:hover { background: rgba(255,255,255,.025); }
   .watchlist-full-card .stock-row .stock-spark { display: flex; }
   .watchlist-full-card .stock-row .stock-price { grid-column: 3; }
   .watchlist-note { font-size: 8px; }
+  .stock-universe-layout { gap: 18px; }
+  .stock-universe-section-heading { align-items: flex-start; flex-direction: column; gap: 9px; }
+  .stock-universe-section-heading h2 { font-size: 16px; }
+  .stock-watchlist-card { padding: 15px 12px 12px; }
+  .stock-managed-row { min-height: 62px; grid-template-columns: minmax(0,1fr) 76px 52px; gap: 7px; }
+  .stock-managed-identity { gap: 7px; }
+  .stock-managed-identity .stock-monogram { width: 27px; height: 27px; }
+  .stock-managed-identity .stock-name-wrap>span { max-width: 155px; font-size: 8px; }
+  .stock-managed-price strong { font-size: 9px; }
+  .stock-managed-price span { font-size: 7px; }
+  .stock-managed-row>.stock-action-remove { min-height: 26px; padding: 0 6px; font-size: 7px; }
+  .stock-watchlist-note { font-size: 8px; line-height: 1.5; }
+  .stock-discover-section,.stock-featured-section { gap: 10px; }
+  .stock-directory-card { padding: 0 11px 11px; }
+  .stock-directory-heading { min-height: 38px; font-size: 8px; }
+  .stock-directory-row { min-height: 61px; grid-template-columns: minmax(0,1fr) 78px auto; gap: 6px; }
+  .stock-directory-identity { gap: 4px; }
+  .stock-directory-identity strong { font-size: 9px; }
+  .stock-directory-identity span { max-width: 175px; font-size: 8px; }
+  .stock-directory-market { font-size: 7px; }
+  .stock-directory-market small { font-size: 6px; }
+  .stock-action-add,.stock-action-remove { min-height: 28px; gap: 3px; padding: 0 6px; font-size: 7px; }
+  .stock-added-actions { gap: 4px; }
+  .stock-added-label { font-size: 7px; }
+  .stock-directory-more { min-height: 36px; }
+  .stock-featured-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+  .stock-featured-card { gap: 8px; padding: 10px 9px; }
+  .stock-featured-link { gap: 6px; }
+  .stock-featured-link .stock-monogram { width: 25px; height: 25px; }
+  .stock-featured-link strong { font-size: 9px; }
+  .stock-featured-link small { font-size: 7px; }
+  .stock-featured-card .stock-added-actions { align-items: flex-start; }
   .portfolio-stat-grid { grid-template-columns: 1fr; gap: 10px; }
   .portfolio-stat-card { min-height: 110px; gap: 8px; padding: 16px; }
   .portfolio-stat-card strong { font-size: 25px; }
@@ -628,6 +709,14 @@ html[data-theme="light"] .chart-marker { stroke: #f4f7f4; }
 html[data-theme="light"] .overview-bottom, html[data-theme="light"] .brief-footer, html[data-theme="light"] .conversation-header, html[data-theme="light"] .watchlist-note, html[data-theme="light"] .holding-row, html[data-theme="light"] .allocation-caption { border-color: var(--line); }
 html[data-theme="light"] .stock-row { border-color: var(--line); }
 html[data-theme="light"] .stock-row:hover, html[data-theme="light"] a.holding-row:hover { background: rgba(42, 81, 50, .035); }
+html[data-theme="light"] .stock-universe-section-heading h2, html[data-theme="light"] .stock-directory-heading span:first-child, html[data-theme="light"] .stock-directory-identity strong, html[data-theme="light"] .stock-featured-link strong, html[data-theme="light"] .stock-managed-price strong { color: #202723; }
+html[data-theme="light"] :is(.stock-universe-section-heading p,.stock-directory-identity span,.stock-directory-market,.stock-featured-link small,.stock-managed-price span,.stock-watchlist-note,.stock-universe-empty,.stock-directory-empty,.stock-directory-heading,.stock-directory-market small,.stock-universe-detail-message) { color: #68736c; }
+html[data-theme="light"] .stock-managed-row, html[data-theme="light"] .stock-directory-row { border-color: var(--line); }
+html[data-theme="light"] .stock-action-add, html[data-theme="light"] .stock-action-remove, html[data-theme="light"] .stock-directory-more { border-color: var(--line-strong); color: #4e6253; background: rgba(255,255,255,.75); }
+html[data-theme="light"] .stock-action-add:hover, html[data-theme="light"] .stock-directory-more:hover:not(:disabled) { color: #285938; background: rgba(85,143,97,.09); }
+html[data-theme="light"] .stock-action-remove:hover { color: #934f46; background: rgba(190,105,90,.06); }
+html[data-theme="light"] .stock-added-label { color: #347447; }
+html[data-theme="light"] .stock-directory-error { color: #98604d; }
 html[data-theme="light"] .stock-monogram, html[data-theme="light"] .stock-detail-monogram { border-color: rgba(45,67,50,.11); background-color: rgba(46,91,56,.045); }
 html[data-theme="light"] .stock-price .positive-text, html[data-theme="light"] .positive-text { color: var(--green) !important; }
 html[data-theme="light"] .stock-price .negative-text, html[data-theme="light"] .negative-text { color: var(--red) !important; }

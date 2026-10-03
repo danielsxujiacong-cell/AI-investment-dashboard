@@ -19,7 +19,8 @@ export function OverviewWatchlist() {
         </span>
       </div>
       <div className="watchlist-rows">
-        {marketData.stocks.map((stock) => <StockRow key={stock.symbol} stock={stock} history={marketData.history[stock.symbol]} />)}
+        {marketData.stocks.slice(0, 8).map((stock) => <StockRow key={stock.symbol} stock={stock} history={marketData.history[stock.symbol]} />)}
+        {marketData.stocks.length === 0 && <div className="overview-watchlist-empty">Your Watchlist is empty. Add a stock from Watchlist.</div>}
       </div>
       <MarketHistoryStatusMessage status={marketData.historyStatus} failedSymbols={marketData.failedHistorySymbols} />
       <MarketDataStatusMessage
