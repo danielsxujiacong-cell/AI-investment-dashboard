@@ -32,9 +32,9 @@ V1–V3 现有产品结构保留。AI Assistant 已通过 Cloudflare Worker 接�
 
 已将首页 Daily Brief 接入现有 GLM Worker。用户手动生成时使用 Watchlist、Portfolio、Finnhub 当前报价、Massive 1M 历史摘要、Investment Memory 和 Investment Notes；成功结果与生成时间写入本机 localStorage，刷新时不自动重复请求。失败重试一次，保留上次成功内容或显示友好提示。
 
-## STEP 5：用户系统和数据库
+## V6：Supabase Auth 与个人数据跨设备同步
 
-引入用户身份认证与数据库，优先评估 Supabase。
+前端与独立数据表/RLS setup 已实现，继续使用现有 `lanlan-cloud-pet` Supabase Project。登录用户从 Supabase 同步 Watchlist、Portfolio、Investment Memory、Investment Notes；访客保留 localStorage。需先执行 `supabase/v6-setup.sql` 并配置公开 Project URL 与 publishable/anon key，再完成认证、导入、RLS、AI context 和跨设备验收。
 
 ## STEP 6：个人 AI 投资助手
 

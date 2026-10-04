@@ -49,6 +49,24 @@ export function readWatchlist(): Stock[] {
   }
 }
 
+export function readStoredWatchlist(): Stock[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(watchlistStorageKey);
+    if (raw === null) return inMemoryWatchlist;
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return inMemoryWatchlist;
+    const savedStocks = parsed.flatMap((item) => {
+      const reference = parseReference(item);
+      return reference ? [stockFromReference(reference)] : [];
+    });
+    inMemoryWatchlist = deduplicate(savedStocks);
+    return inMemoryWatchlist;
+  } catch {
+    return inMemoryWatchlist;
+  }
+}
+
 export function saveWatchlist(nextStocks: Stock[]) {
   inMemoryWatchlist = deduplicate(nextStocks);
   if (typeof window !== "undefined") {

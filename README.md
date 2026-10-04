@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-**V5.4 Real Fundamentals 已接入股票详情页。** 打开详情时，Cloudflare Worker 才请求 Finnhub Company Profile 2 与 Basic Financials；Market Cap、P/E、52 Week High/Low 显示真实来源或明确的 Unavailable。Finnhub 没有提供 52 周区间时，复用 Massive 1Y 日线缓存计算；API Key 继续保留在 Worker Secret。V5.2 Daily Brief 与 AI Assistant 继续通过 Worker 调用智谱 `glm-4-flash-250414`；Brief 使用 Watchlist、Portfolio、Finnhub 报价、Massive 历史摘要、Investment Memory 和 Investment Notes。个人投资数据仍保存在当前设备。
+**V6 Supabase Auth 与个人数据云同步已接入代码，等待现有 Supabase 项目的 SQL 与公开前端配置后完成线上验收。** 已为 Watchlist、Portfolio、Investment Memory、Investment Notes 增加独立数据表和 RLS setup；访客继续使用 localStorage，登录用户以 Supabase 为主数据源。localStorage 导入必须由用户点击确认，且只允许导入到四张云表全部为空的账号。部署 SQL 和所需变量见下文。V5.4 fundamentals、V5.2 Daily Brief 与 AI Assistant 继续使用现有 Finnhub、Massive 和 Cloudflare Worker 路径。
 
 ## 开发阶段
 
@@ -14,11 +14,12 @@
 - STEP 1：MVP UI 开发（假数据，已完成）
 - STEP 2：GitHub Pages 静态网站部署（已采用）
 - STEP 2.5：Cloudflare Worker 行情代理（已部署并通过公网验证）
-- V4：Personal Investment System（已完成，本机 localStorage）
+- V4：Personal Investment System（本机 localStorage fallback）
 - V5 第一阶段：供应商中立的 OpenAI-Compatible AI API 接入（智谱 `glm-4-flash-250414`；真实对话已验收）
 - V5.2：首页 Daily Brief 真实 AI 生成与本机当日缓存
 - V5.4：详情页真实基础指标与 52 周区间回退计算
-- STEP 5：用户系统和数据库
+- V6：Supabase Auth 与四类个人数据跨设备同步（代码已接入，等待 SQL 与公开前端配置）
+- STEP 5：Supabase 用户系统和数据库（V6 实现待项目配置）
 - STEP 6：个人 AI 投资助手
 
 ## 开发原则
@@ -40,7 +41,8 @@
 - 股票详情中的个人 Investment Memory，以及可新增、编辑和删除的 Investment Notes
 - AI Assistant 保留原页面与快捷问题；配置 API 后发送个人上下文进行真实对话，显示 Thinking、API unavailable 和模型名称，失败时回退 Mock
 - 首页 Daily Brief 可手动生成/刷新，按 Market Overview、Opportunities、Risks、Watchlist Focus、Portfolio Note 展示真实 GLM 简报；展示 Last generated 时间并缓存成功结果
-- 个人投资数据保存在当前设备的 localStorage，不会跨电脑或手机同步
+- 未登录时个人投资数据保存在当前设备的 localStorage；登录后 Watchlist、Portfolio、Investment Memory、Investment Notes 从 Supabase 读取并写入
+- 首次登录时，只有四张云表全空且本地有数据才显示 “Import local data”；确认导入后本地副本保留
 - 可展开的每日 AI 市场简报
 - 桌面侧边栏与手机底部导航
 
@@ -73,6 +75,17 @@ node node_modules/wrangler/bin/wrangler.js deploy --config api-proxy/wrangler.js
 
 ## 后续计划
 
-个人数据仍保存在设备本地；每次发送时仅按请求转发给配置的 AI 服务。当前不包含联网搜索、新闻抓取、自动投资、定时任务、Supabase、登录或跨设备同步。真实智谱 AI 对话已通过线上 Worker 验收。
+未登录时个人数据保存在设备本地；登录时 AI Assistant 与 Daily Brief 使用已加载的 Supabase 个人数据。每次发送时仍仅按请求经 Worker 转发给配置的 AI 服务。当前不包含联网搜索、新闻抓取、自动投资或 Realtime 同步。真实智谱 AI 对话已通过线上 Worker 验收。
+
+## Supabase V6 配置
+
+继续使用现有 `lanlan-cloud-pet` Supabase Project，不要创建新项目。把 [`supabase/v6-setup.sql`](supabase/v6-setup.sql) 的全部内容一次性复制到该项目的 Supabase SQL Editor 执行；脚本只创建 AI Investment Dashboard 自己的四张表、RLS、更新时间触发器和受保护的本地导入 RPC。
+
+本地 `.env.local` 与 GitHub Actions Repository Variables 都需要以下公开变量：
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`（推荐）；没有 publishable key 时可用 `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+这些是浏览器端可见的 Supabase Project URL 与 publishable/anon key；不要配置 `service_role`、数据库密码或其他 Secret。未配置这些变量时，网站仍可作为访客使用 localStorage，但登录/云同步不可用。修改 GitHub Repository Variables 后重新运行 Pages workflow。
 
 详见 [开发路线](docs/ROADMAP.md)、[产品说明](docs/PRODUCT.md) 和 [技术方案](docs/TECH_STACK.md)。

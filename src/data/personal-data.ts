@@ -47,7 +47,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isSymbol(value: unknown): value is string {
-  return typeof value === "string" && /^[A-Z][A-Z0-9.-]{0,9}$/.test(value);
+  return typeof value === "string" && /^[A-Z][A-Z0-9.-]{0,14}$/.test(value);
 }
 
 function isHolding(value: unknown): value is PortfolioHolding {

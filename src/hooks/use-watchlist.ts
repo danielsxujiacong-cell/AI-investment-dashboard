@@ -1,41 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { stocks, type Stock } from "@/data/stocks";
-import { readWatchlist, saveWatchlist, watchlistChangedEvent } from "@/data/watchlist";
+import { useCallback } from "react";
+import { usePersonalData } from "@/components/personal-data-provider";
 import { stockFromReference, type StockReference } from "@/data/stock-universe";
 
 export function useWatchlist() {
-  const [watchlist, setWatchlist] = useState<Stock[]>(stocks);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    const syncWatchlist = () => {
-      setWatchlist(readWatchlist());
-      setReady(true);
-    };
-    syncWatchlist();
-    window.addEventListener(watchlistChangedEvent, syncWatchlist);
-    window.addEventListener("storage", syncWatchlist);
-    return () => {
-      window.removeEventListener(watchlistChangedEvent, syncWatchlist);
-      window.removeEventListener("storage", syncWatchlist);
-    };
-  }, []);
+  const { watchlist, ready, saveWatchlist } = usePersonalData();
 
   const add = useCallback((reference: StockReference) => {
-    const current = readWatchlist();
     const symbol = reference.symbol.toUpperCase();
-    if (current.some((stock) => stock.symbol === symbol)) return;
-    setWatchlist(saveWatchlist([...current, stockFromReference(reference)]));
-    setReady(true);
-  }, []);
+    if (!ready || watchlist.some((stock) => stock.symbol === symbol)) return;
+    saveWatchlist([...watchlist, stockFromReference(reference)]);
+  }, [ready, saveWatchlist, watchlist]);
 
   const remove = useCallback((symbol: string) => {
-    const current = readWatchlist();
-    setWatchlist(saveWatchlist(current.filter((stock) => stock.symbol !== symbol.toUpperCase())));
-    setReady(true);
-  }, []);
+    if (!ready) return;
+    saveWatchlist(watchlist.filter((stock) => stock.symbol !== symbol.toUpperCase()));
+  }, [ready, saveWatchlist, watchlist]);
 
   return { stocks: watchlist, ready, add, remove };
 }

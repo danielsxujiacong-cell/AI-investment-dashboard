@@ -22,7 +22,7 @@ function createId() {
 }
 
 export function PortfolioWorkspace() {
-  const { data, ready, storageAvailable, savePortfolio } = usePersonalData();
+  const { data, ready, storageAvailable, user, syncing, savePortfolio } = usePersonalData();
   const marketData = useStockMarketData();
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -90,20 +90,19 @@ export function PortfolioWorkspace() {
     const parsedAverageCost = Number(averageCost);
     if (!Number.isFinite(parsedShares) || parsedShares <= 0 || !Number.isFinite(parsedAverageCost) || parsedAverageCost <= 0) return;
 
-    if (editingId) {
-      savePortfolio(data.portfolio.map((holding) => holding.id === editingId
+    const next = editingId
+      ? data.portfolio.map((holding) => holding.id === editingId
         ? { ...holding, symbol, shares: parsedShares, averageCost: parsedAverageCost }
-        : holding));
-    } else {
-      savePortfolio([...data.portfolio, { id: createId(), symbol, shares: parsedShares, averageCost: parsedAverageCost }]);
-    }
-    resetForm();
+        : holding)
+      : [...data.portfolio, { id: createId(), symbol, shares: parsedShares, averageCost: parsedAverageCost }];
+    void savePortfolio(next).then((saved) => { if (saved) resetForm(); });
   }
 
   function removeHolding(id: string) {
     if (!ready) return;
-    savePortfolio(data.portfolio.filter((holding) => holding.id !== id));
-    if (editingId === id) resetForm();
+    void savePortfolio(data.portfolio.filter((holding) => holding.id !== id)).then((saved) => {
+      if (saved && editingId === id) resetForm();
+    });
   }
 
   return (
@@ -160,7 +159,7 @@ export function PortfolioWorkspace() {
               <input type="number" min="0.01" step="any" value={averageCost} onChange={(event) => setAverageCost(event.target.value)} placeholder="150.00" required />
             </label>
             <div className="personal-form-actions">
-              <button type="submit" className="primary-button">{editingId ? "Save changes" : "Save holding"}</button>
+              <button type="submit" className="primary-button" disabled={syncing}>{syncing ? "Saving…" : editingId ? "Save changes" : "Save holding"}</button>
             </div>
           </div>
           <p className="form-help">Live quotes are available for the five symbols in your Watchlist.</p>
@@ -216,7 +215,7 @@ export function PortfolioWorkspace() {
 
       <InvestmentNotes />
 
-      <p className="personal-data-notice">Personal data is stored locally on this device.{!storageAvailable ? " Local storage is unavailable; changes last for this visit." : ""}</p>
+      <p className="personal-data-notice">{user ? "Your Supabase account is the active source. This device’s local copy is preserved unchanged." : "Personal data is stored locally on this device."}{!user && !storageAvailable ? " Local storage is unavailable; changes last for this visit." : ""}</p>
     </div>
   );
 }

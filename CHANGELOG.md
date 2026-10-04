@@ -2,6 +2,8 @@
 
 ## 2026-10-04
 
+- V6 implementation: add Supabase email/password sign-in, user-owned cloud sync for Watchlist, Portfolio, Investment Memory, and Investment Notes, an explicit local-data import flow that only imports into an empty account, and local fallback on sign-out. Cloud activation and login acceptance await the existing Supabase SQL and public build variables.
+- Add the app-specific Supabase SQL setup at `supabase/v6-setup.sql`; enable RLS with `auth.uid() = user_id`, table grants, `updated_at` triggers, and a user-scoped import RPC. No other app's tables are referenced.
 - V5.4: replace the stock-detail Market Cap, P/E, and 52 Week High/Low mock snapshots with on-demand Finnhub fundamentals. Missing 52-week values fall back to a calculation over cached Massive 1Y daily candles; every value shows its real source or an explicit Unavailable state.
 - Add a cached Cloudflare Worker fundamentals endpoint, keeping Finnhub credentials server-side and limiting requests to stock-detail views.
 

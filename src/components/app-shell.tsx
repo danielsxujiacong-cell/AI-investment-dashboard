@@ -5,6 +5,9 @@ import { usePathname } from "next/navigation";
 import { useLayoutEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Icon, type IconName } from "@/components/icons";
+import { AccountMenu } from "@/components/account-menu";
+import { PersonalDataStatus } from "@/components/personal-data-status";
+import { usePersonalData } from "@/components/personal-data-provider";
 import { useStockMarketData } from "@/hooks/use-stock-market-data";
 
 const navigation: { label: string; href: string; icon: IconName }[] = [
@@ -29,6 +32,7 @@ function Brand() {
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [theme, setTheme] = useState<Theme>("dark");
+  const { user } = usePersonalData();
   const marketData = useStockMarketData({ maxWatchlistSymbols: 8 });
   const realQuotes = Object.values(marketData.liveQuotes);
   const averageChange = realQuotes.length
@@ -111,7 +115,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Brand />
         <div className="workspace-switcher">
           <div className="workspace-avatar">W</div>
-          <div className="workspace-copy"><strong>Personal workspace</strong><span>Private account</span></div>
+          <div className="workspace-copy"><strong>Personal workspace</strong><span>{user ? "Supabase account" : "Local device"}</span></div>
           <span className="workspace-chevron">⌄</span>
         </div>
 
@@ -136,8 +140,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className={"pulse-value" + (averageChange !== null && averageChange < 0 ? " negative-text" : "")}>{averageChange === null ? "—" : `${averageChange >= 0 ? "+" : ""}${averageChange.toFixed(2)}%`}</span>
           </div>
           <div className="sidebar-profile">
-            <div className="profile-avatar">B</div>
-            <div className="profile-copy"><strong>Blake Weiss</strong><span>Personal</span></div>
+            <div className="profile-avatar">{user?.email?.slice(0, 1).toUpperCase() ?? "G"}</div>
+            <div className="profile-copy"><strong>{user?.email ?? "Guest"}</strong><span>{user ? "Supabase account" : "Local device"}</span></div>
             <Icon name="more" size={17} />
           </div>
         </div>
@@ -150,6 +154,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="topbar-actions">
             <div className="market-status"><i className="live-dot" /><span>Market Data</span></div>
             <div className="topbar-divider" />
+            <AccountMenu />
             <button
               type="button"
               className="icon-button theme-toggle"
@@ -162,11 +167,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             <button type="button" className="icon-button notification-button" aria-label="Notifications">
               <Icon name="bell" size={18} /><span className="notification-dot" />
             </button>
-            <div className="topbar-avatar" aria-label="Blake Weiss">B</div>
           </div>
         </header>
 
-        <div className="main-content">{children}</div>
+        <div className="main-content">
+          <PersonalDataStatus />
+          {children}
+        </div>
       </main>
 
       <nav className="mobile-nav" aria-label="Mobile navigation">

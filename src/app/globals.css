@@ -78,6 +78,19 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .breadcrumb b { color: #444a53; font-weight: 400; }
 .breadcrumb strong { color: #a3a8b1; font-size: 9px; font-weight: 620; }
 .topbar-actions { display: flex; align-items: center; gap: 15px; }
+.account-menu-wrap { position: relative; }
+.account-menu-trigger { display: inline-flex; min-height: 34px; align-items: center; gap: 7px; padding: 0 9px 0 5px; border: 1px solid var(--line-strong); border-radius: 9px; color: #c9d1cb; background: rgba(255,255,255,.025); font-size: 10px; }
+.account-menu-trigger:hover { border-color: rgba(154,199,168,.32); background: rgba(255,255,255,.05); }
+.account-menu-trigger:disabled { opacity: .62; }
+.account-menu-avatar { display: grid; width: 22px; height: 22px; place-items: center; border: 1px solid rgba(154,199,168,.2); border-radius: 7px; color: #c4dbc9; background: rgba(154,199,168,.09); font-size: 10px; }
+.account-menu-panel { position: absolute; z-index: 35; top: calc(100% + 11px); right: 0; width: min(320px,calc(100vw - 24px)); padding: 17px; border: 1px solid var(--line-strong); border-radius: 14px; color: var(--text); background: #11151a; box-shadow: 0 18px 48px rgba(0,0,0,.32); }
+.account-menu-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.account-menu-close { width: 26px; height: 26px; border: 0; border-radius: 7px; color: #949c97; background: transparent; font-size: 19px; line-height: 1; }
+.account-menu-panel>p { margin: 11px 0 13px; color: #929a95; font-size: 10px; line-height: 1.55; }
+.account-menu-email { display: block; overflow: hidden; margin-top: 10px; color: #e0e7e2; font-size: 12px; font-weight: 570; text-overflow: ellipsis; white-space: nowrap; }
+.account-menu-form { display: flex; flex-direction: column; gap: 11px; margin-top: 13px; }
+.account-menu-submit { width: 100%; margin-top: 2px; }
+.account-menu-error { margin: 0; color: #db9f99; font-size: 9px; line-height: 1.5; overflow-wrap: anywhere; }
 .market-status { display: inline-flex; align-items: center; gap: 8px; color: #b9c9bc; font-size: 10px; font-weight: 550; }
 .market-status small { margin-left: 2px; padding: 3px 5px; border: 1px solid rgba(151,188,159,.12); border-radius: 4px; color: #77897c; font-size: 7px; font-weight: 700; letter-spacing: .08em; }
 .topbar-divider { width: 1px; height: 20px; background: var(--line-strong); }
@@ -87,6 +100,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .topbar-avatar { width: 27px; height: 27px; border: 1px solid rgba(212,195,169,.17); border-radius: 50%; background: linear-gradient(145deg,#5d5145,#292b31); font-size: 10px; }
 .mobile-brand { display: none; }
 .main-content { width: min(100%,1510px); margin: 0 auto; padding: 39px clamp(26px,4vw,58px) 52px; }
+.personal-sync-banner { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin: 0 0 18px; padding: 13px 15px; border: 1px solid rgba(154,199,168,.18); border-radius: 12px; background: rgba(154,199,168,.045); }
+.personal-sync-banner.has-error { border-color: rgba(214,150,149,.25); background: rgba(214,150,149,.055); }
+.personal-sync-copy { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
+.personal-sync-copy strong { color: #d5e1d8; font-size: 10px; font-weight: 630; }
+.personal-sync-copy span { color: #929b95; font-size: 9px; line-height: 1.5; }
+.personal-sync-banner.has-error .personal-sync-copy strong { color: #e3b2ac; }
+.personal-sync-banner .primary-button { flex: 0 0 auto; }
 .page-stack { display: flex; flex-direction: column; gap: 22px; }
 .page-enter { animation: enter .38s ease both; }
 @keyframes enter { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -488,6 +508,11 @@ a.holding-row:hover { background: rgba(255,255,255,.025); }
   .sidebar { display: none; }
   .main-panel { margin-left: 0; }
   .topbar { height: 58px; padding: 0 16px; }
+  .account-menu-trigger { min-height: 32px; padding: 0 6px; }
+  .account-menu-trigger>span:last-child { display: none; }
+  .account-menu-panel { position: fixed; top: 64px; right: 12px; }
+  .personal-sync-banner { align-items: flex-start; flex-direction: column; gap: 11px; padding: 12px; }
+  .personal-sync-banner .primary-button { width: 100%; }
   .mobile-brand { display: block; }
   .mobile-brand .brand-lockup { gap: 8px; }
   .mobile-brand .brand-mark { width: 26px; height: 26px; }
@@ -705,6 +730,13 @@ html[data-theme="light"] .nav-item.active svg, html[data-theme="light"] .nav-new
 html[data-theme="light"] .icon-button { color: #66736b; }
 html[data-theme="light"] .icon-button:hover { border-color: var(--line); color: #263c2c; background: rgba(45, 88, 54, .055); }
 html[data-theme="light"] .topbar-divider { background: var(--line-strong); }
+html[data-theme="light"] .account-menu-trigger { color: #43534a; background: rgba(255,255,255,.6); }
+html[data-theme="light"] .account-menu-avatar { color: #397148; background: rgba(80,143,96,.09); }
+html[data-theme="light"] .account-menu-panel { border-color: var(--line-strong); background: #fff; box-shadow: 0 18px 48px rgba(30,45,34,.17); }
+html[data-theme="light"] .account-menu-email,html[data-theme="light"] .personal-sync-copy strong { color: #26372d; }
+html[data-theme="light"] .account-menu-panel>p,html[data-theme="light"] .personal-sync-copy span { color: #68736c; }
+html[data-theme="light"] .personal-sync-banner { border-color: rgba(62,125,76,.18); background: rgba(78,143,94,.055); }
+html[data-theme="light"] .personal-sync-banner.has-error { border-color: rgba(169,83,73,.23); background: rgba(190,91,79,.05); }
 html[data-theme="light"] .page-heading h1, html[data-theme="light"] .stock-symbol-line h1 { color: #202723; }
 html[data-theme="light"] .primary-button { border-color: rgba(58, 115, 73, .19); color: #285938; background: linear-gradient(110deg, rgba(113,149,124,.18), rgba(113,149,124,.09)); box-shadow: inset 0 1px rgba(255,255,255,.8), 0 5px 16px rgba(31,48,37,.08); }
 html[data-theme="light"] .primary-button:hover { border-color: rgba(58,115,73,.3); background: linear-gradient(110deg, rgba(113,149,124,.25), rgba(113,149,124,.13)); }

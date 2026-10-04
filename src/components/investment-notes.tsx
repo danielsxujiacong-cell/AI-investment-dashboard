@@ -16,7 +16,7 @@ function createId() {
 }
 
 export function InvestmentNotes() {
-  const { data, ready, saveInvestmentNotes } = usePersonalData();
+  const { data, ready, syncing, saveInvestmentNotes } = usePersonalData();
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [date, setDate] = useState(todayLocal);
@@ -51,7 +51,7 @@ export function InvestmentNotes() {
     setFormOpen(true);
   }
 
-  function submitNote(event: React.FormEvent<HTMLFormElement>) {
+  async function submitNote(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!ready) return;
     const now = new Date().toISOString();
@@ -65,15 +65,16 @@ export function InvestmentNotes() {
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     };
-    saveInvestmentNotes(existing
+    const saved = await saveInvestmentNotes(existing
       ? data.investmentNotes.map((note) => note.id === existing.id ? nextNote : note)
       : [...data.investmentNotes, nextNote]);
-    resetForm();
+    if (saved) resetForm();
   }
 
   function removeNote(id: string) {
-    saveInvestmentNotes(data.investmentNotes.filter((note) => note.id !== id));
-    if (editingId === id) resetForm();
+    void saveInvestmentNotes(data.investmentNotes.filter((note) => note.id !== id)).then((saved) => {
+      if (saved && editingId === id) resetForm();
+    });
   }
 
   return (
@@ -97,7 +98,7 @@ export function InvestmentNotes() {
             <label className="personal-field note-content-field"><span>Content</span><textarea rows={3} value={content} onChange={(event) => setContent(event.target.value)} placeholder="Add a brief research note…" required /></label>
             <div className="personal-form-actions">
               <button type="button" className="text-action" onClick={resetForm}>Cancel</button>
-              <button type="submit" className="primary-button">{editingId ? "Save note" : "Add note"}</button>
+              <button type="submit" className="primary-button" disabled={syncing}>{syncing ? "Saving…" : editingId ? "Save note" : "Add note"}</button>
             </div>
           </div>
         </form>

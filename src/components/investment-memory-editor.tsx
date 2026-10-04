@@ -5,7 +5,7 @@ import { usePersonalData } from "@/components/personal-data-provider";
 import { emptyInvestmentMemory, type InvestmentMemory } from "@/data/personal-data";
 
 export function InvestmentMemoryEditor({ symbol }: { symbol: string }) {
-  const { data, ready, storageAvailable, saveInvestmentMemory } = usePersonalData();
+  const { data, ready, storageAvailable, user, syncing, saveInvestmentMemory } = usePersonalData();
   const [draft, setDraft] = useState<InvestmentMemory>(emptyInvestmentMemory);
   const [saved, setSaved] = useState(false);
   const appliedSymbol = useRef("");
@@ -27,12 +27,14 @@ export function InvestmentMemoryEditor({ symbol }: { symbol: string }) {
     setSaved(false);
   }
 
-  function save(event: React.FormEvent<HTMLFormElement>) {
+  async function save(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setSaved(false);
+    const persisted = await saveInvestmentMemory(symbol, draft);
+    if (!persisted) return;
     const hasContent = Object.values(draft).some((value) => value.trim().length > 0);
     appliedSymbol.current = symbol;
     appliedMemory.current = hasContent ? draft : emptyInvestmentMemory;
-    saveInvestmentMemory(symbol, draft);
     setSaved(true);
   }
 
@@ -62,8 +64,8 @@ export function InvestmentMemoryEditor({ symbol }: { symbol: string }) {
           </label>
         </div>
         <div className="memory-footer">
-          <span className="personal-data-notice">Personal data is stored locally on this device.{!storageAvailable ? " Local storage is unavailable; changes last for this visit." : ""}</span>
-          <button type="submit" className="primary-button" disabled={!ready}>Save memory</button>
+          <span className="personal-data-notice">{user ? "Your Supabase account is the active source. This device’s local copy is preserved unchanged." : "Personal data is stored locally on this device."}{!user && !storageAvailable ? " Local storage is unavailable; changes last for this visit." : ""}</span>
+          <button type="submit" className="primary-button" disabled={!ready || syncing}>{syncing ? "Saving…" : "Save memory"}</button>
         </div>
       </form>
     </section>

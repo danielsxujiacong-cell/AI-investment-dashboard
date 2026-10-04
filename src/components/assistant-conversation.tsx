@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { getMockAiResponse } from "@/data/mockAi";
 import { usePersonalData } from "@/components/personal-data-provider";
-import { stocks } from "@/data/stocks";
 import { Icon } from "@/components/icons";
 import { useStockMarketData } from "@/hooks/use-stock-market-data";
 import { marketApiUrl } from "@/data/market-api";
@@ -19,7 +18,7 @@ const quickQuestions = [
 ];
 
 export function AssistantConversation() {
-  const { data, ready, storageAvailable } = usePersonalData();
+  const { data, ready, storageAvailable, user } = usePersonalData();
   const marketData = useStockMarketData();
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
@@ -89,7 +88,7 @@ export function AssistantConversation() {
         question: prompt,
         history,
         context: {
-          watchlist: stocks.map((stock) => ({
+          watchlist: marketData.stocks.map((stock) => ({
             symbol: stock.symbol,
             name: stock.name,
             sector: stock.sector,
@@ -167,7 +166,7 @@ export function AssistantConversation() {
         text: getMockAiResponse(prompt, {
           portfolio: data.portfolio,
           investmentMemory: data.investmentMemory,
-          watchlistSymbols: stocks.map((stock) => stock.symbol),
+          watchlistSymbols: marketData.stocks.map((stock) => stock.symbol),
         }) + "\n\nThe AI API is unavailable, so this is a Mock fallback response.",
         source: "mock",
       }]);
@@ -191,7 +190,7 @@ export function AssistantConversation() {
       <section className="card personal-context-card" aria-label="Personal Context">
         <div className="panel-heading">
           <div><span className="eyebrow">AVAILABLE TO AI ON REQUEST</span><h2>Personal Context</h2></div>
-          <span className="mock-label"><i /> ON DEVICE</span>
+          <span className="mock-label"><i /> {user ? "SUPABASE ACCOUNT" : "ON DEVICE"}</span>
         </div>
         {!ready ? <p className="context-empty">Loading your saved context…</p> : (
           <div className="personal-context-grid">
@@ -229,11 +228,11 @@ export function AssistantConversation() {
             </div>
             <div className="context-group watchlist-context-group">
               <span className="eyebrow">MY WATCHLIST</span>
-              <div className="context-symbols">{stocks.map((stock) => <span key={stock.symbol}>{stock.symbol}</span>)}</div>
+              <div className="context-symbols">{marketData.stocks.map((stock) => <span key={stock.symbol}>{stock.symbol}</span>)}</div>
             </div>
           </div>
         )}
-        <p className="personal-data-notice">Personal data is stored locally on this device.{!storageAvailable ? " Local storage is unavailable; changes last for this visit." : ""} When you send a message, its question and investment context are sent to the configured AI service through the Worker.</p>
+        <p className="personal-data-notice">{user ? "Personal context uses your signed-in Supabase data." : "Personal data is stored locally on this device."}{!user && !storageAvailable ? " Local storage is unavailable; changes last for this visit." : ""} When you send a message, its question and investment context are sent to the configured AI service through the Worker.</p>
       </section>
 
       <div className="quick-prompts">
