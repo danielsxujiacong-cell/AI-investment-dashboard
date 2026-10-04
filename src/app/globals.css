@@ -156,9 +156,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .watchlist-live { display: flex; align-items: center; gap: 7px; padding: 5px 7px; border: 1px solid rgba(154,199,168,.12); border-radius: 6px; color: #91ad98; font-size: 7px; font-weight: 700; letter-spacing: .09em; }
 .watchlist-live .live-dot { width: 5px; height: 5px; }
 .watchlist-rows { margin-top: 12px; }
-.stock-row { display: grid; min-height: 56px; grid-template-columns: minmax(0,1fr) 88px 86px 14px; align-items: center; gap: 11px; border-bottom: 1px solid rgba(226,232,239,.05); transition: background .18s,padding .18s; }
+.stock-row { display: grid; min-height: 56px; grid-template-columns: minmax(0,1fr) 34px; align-items: center; gap: 4px; border-bottom: 1px solid rgba(226,232,239,.05); transition: background .18s; }
 .stock-row:last-child { border-bottom: 0; }
-.stock-row:hover { padding-right: 3px; padding-left: 3px; background: rgba(255,255,255,.025); }
+.stock-row:hover { background: rgba(255,255,255,.025); }
+.stock-row-link { display: grid; min-width: 0; min-height: 56px; grid-template-columns: minmax(0,1fr) 88px 86px 14px; align-items: center; gap: 11px; }
+.watchlist-remove-button { display: grid; width: 30px; height: 30px; justify-self: center; place-items: center; padding: 0; border: 1px solid transparent; border-radius: 8px; color: #77808a; background: transparent; cursor: pointer; transition: .18s ease; }
+.watchlist-remove-button:hover,.watchlist-remove-button:focus-visible { border-color: rgba(205,130,116,.2); color: #c7a09a; background: rgba(190,105,90,.055); }
+.watchlist-remove-button:focus-visible { outline: 2px solid rgba(151,190,158,.4); outline-offset: 2px; }
+.stock-managed-remove-button { width: 32px; height: 32px; }
 .stock-identity { display: flex; min-width: 0; align-items: center; gap: 9px; }
 .stock-monogram { display: grid; width: 31px; height: 31px; flex: 0 0 auto; place-items: center; border: 1px solid rgba(203,211,219,.08); border-radius: 10px; color: #c9d2cb; background: rgba(255,255,255,.045); font-size: 11px; font-weight: 660; }
 .monogram-N { color: #a8cbb0; background: linear-gradient(145deg,rgba(93,142,106,.25),rgba(48,70,56,.19)); }
@@ -181,7 +186,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .positive-text { color: #9bcba6 !important; }
 .negative-text { color: #d39392 !important; }
 .stock-row-chevron { display: flex; justify-content: flex-end; color: #626a74; opacity: 0; transition: opacity .18s,transform .18s; }
-.stock-row:hover .stock-row-chevron { opacity: 1; transform: translateX(2px); }
+.stock-row-link:hover .stock-row-chevron { opacity: 1; transform: translateX(2px); }
 .watchlist-footer-link { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; padding: 11px 1px 0; color: #7f8791; font-size: 9px; transition: color .18s; }
 .watchlist-footer-link:hover { color: #bdc9c1; }
 .watchlist-footer-link span { display: flex; align-items: center; gap: 6px; }
@@ -519,11 +524,13 @@ a.holding-row:hover { background: rgba(255,255,255,.025); }
   .watchlist-card,.brief-card { padding: 17px 14px 14px; }
   .section-heading h2,.panel-heading h2 { font-size: 15px; }
   .watchlist-live { padding: 4px 5px; font-size: 6px; }
-  .stock-row { min-height: 54px; grid-template-columns: minmax(0,1fr) 43px 68px 14px; gap: 6px; }
+  .stock-row { min-height: 54px; grid-template-columns: minmax(0,1fr) 34px; gap: 2px; }
+  .stock-row-link { min-height: 54px; grid-template-columns: minmax(0,1fr) 43px 68px 14px; gap: 6px; }
   .stock-spark { display: flex; grid-column: 2; }
   .stock-spark .sparkline, .stock-spark .sparkline-placeholder, .stock-spark .sparkline-unavailable { width: 42px; height: 24px; }
   .stock-row .stock-price { grid-column: 3; grid-row: 1; }
   .stock-row-chevron { grid-column: 4; grid-row: 1; }
+  .watchlist-remove-button { width: 32px; height: 32px; }
   .stock-monogram { width: 29px; height: 29px; }
   .stock-name-wrap>span { max-width: 145px; }
   .brief-title-row h2 { font-size: 16px; }
@@ -709,6 +716,8 @@ html[data-theme="light"] .chart-marker { stroke: #f4f7f4; }
 html[data-theme="light"] .overview-bottom, html[data-theme="light"] .brief-footer, html[data-theme="light"] .conversation-header, html[data-theme="light"] .watchlist-note, html[data-theme="light"] .holding-row, html[data-theme="light"] .allocation-caption { border-color: var(--line); }
 html[data-theme="light"] .stock-row { border-color: var(--line); }
 html[data-theme="light"] .stock-row:hover, html[data-theme="light"] a.holding-row:hover { background: rgba(42, 81, 50, .035); }
+html[data-theme="light"] .watchlist-remove-button { color: #718076; }
+html[data-theme="light"] .watchlist-remove-button:hover, html[data-theme="light"] .watchlist-remove-button:focus-visible { color: #93564d; background: rgba(190,105,90,.055); }
 html[data-theme="light"] .stock-universe-section-heading h2, html[data-theme="light"] .stock-directory-heading span:first-child, html[data-theme="light"] .stock-directory-identity strong, html[data-theme="light"] .stock-featured-link strong, html[data-theme="light"] .stock-managed-price strong { color: #202723; }
 html[data-theme="light"] :is(.stock-universe-section-heading p,.stock-directory-identity span,.stock-directory-market,.stock-featured-link small,.stock-managed-price span,.stock-watchlist-note,.stock-universe-empty,.stock-directory-empty,.stock-directory-heading,.stock-directory-market small,.stock-universe-detail-message) { color: #68736c; }
 html[data-theme="light"] .stock-managed-row, html[data-theme="light"] .stock-directory-row { border-color: var(--line); }

@@ -5,9 +5,11 @@ import { MarketDataStatusMessage, MarketHistoryStatusMessage } from "@/component
 import { Icon } from "@/components/icons";
 import { SectionHeading, StockRow } from "@/components/stock-row";
 import { useStockMarketData } from "@/hooks/use-stock-market-data";
+import { useWatchlist } from "@/hooks/use-watchlist";
 
 export function OverviewWatchlist() {
   const marketData = useStockMarketData(true);
+  const watchlist = useWatchlist();
 
   return (
     <section className="card watchlist-card">
@@ -19,7 +21,7 @@ export function OverviewWatchlist() {
         </span>
       </div>
       <div className="watchlist-rows">
-        {marketData.stocks.slice(0, 8).map((stock) => <StockRow key={stock.symbol} stock={stock} history={marketData.history[stock.symbol]} />)}
+        {marketData.stocks.slice(0, 8).map((stock) => <StockRow key={stock.symbol} stock={stock} history={marketData.history[stock.symbol]} onRemove={watchlist.remove} />)}
         {marketData.stocks.length === 0 && <div className="overview-watchlist-empty">Your Watchlist is empty. Add a stock from Watchlist.</div>}
       </div>
       <MarketHistoryStatusMessage status={marketData.historyStatus} failedSymbols={marketData.failedHistorySymbols} />

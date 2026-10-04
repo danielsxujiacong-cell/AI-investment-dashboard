@@ -153,7 +153,15 @@ export function WatchlistExplorer() {
                     {stock.price > 0 ? (stock.changePercent >= 0 ? "+" : "") + stock.changePercent.toFixed(2) + "%" : "Quote on open"}
                   </span>
                 </Link>
-                <button type="button" className="stock-action-remove" onClick={() => watchlist.remove(stock.symbol)}>Remove</button>
+                <button
+                  type="button"
+                  className="watchlist-remove-button stock-managed-remove-button"
+                  aria-label={"Remove " + stock.symbol + " from Watchlist"}
+                  title="Remove from Watchlist"
+                  onClick={() => watchlist.remove(stock.symbol)}
+                >
+                  <Icon name="close" size={15} />
+                </button>
               </div>
             ))}
           </div>
