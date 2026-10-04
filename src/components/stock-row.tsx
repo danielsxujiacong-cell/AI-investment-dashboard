@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { Stock } from "@/data/stocks";
+import { referenceFromStock, stockDetailHref } from "@/data/stock-universe";
 import type { MiniHistoryState } from "@/hooks/use-stock-market-data";
 import { Icon } from "@/components/icons";
 import { Sparkline } from "@/components/charts";
@@ -20,7 +21,7 @@ export function StockRow({
 
   return (
     <div className="stock-row">
-      <Link href={"/stocks/" + stock.symbol} className="stock-row-link">
+      <Link href={stockDetailHref(referenceFromStock(stock))} className="stock-row-link">
         <div className="stock-identity">
           <span className={"stock-monogram monogram-" + stock.symbol}>{stock.symbol.slice(0, 1)}</span>
           <span className="stock-name-wrap">
