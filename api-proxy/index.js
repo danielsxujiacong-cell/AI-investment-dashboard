@@ -2,6 +2,8 @@ const rateBuckets = new Map();
 const historyCache = new Map();
 const tickerPageCache = new Map();
 const tickerPageRequests = new Map();
+const fundamentalsCache = new Map();
+const fundamentalsRequests = new Map();
 const massiveRequestTimes = [];
 
 function allowedOrigins(env) {
@@ -452,6 +454,125 @@ async function getQuote(request, env, symbol) {
   }
 }
 
+function finiteNumber(value) {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+async function fetchFinnhubJson(url, token) {
+  try {
+    const response = await fetch(url, {
+      headers: { Accept: "application/json", "X-Finnhub-Token": token },
+    });
+    const payload = await response.json().catch(() => null);
+    return { ok: response.ok && isRecord(payload), status: response.status, payload };
+  } catch {
+    return { ok: false, status: 0, payload: null };
+  }
+}
+
+async function loadFinnhubFundamentals(env, symbol) {
+  const cached = fundamentalsCache.get(symbol);
+  if (cached && cached.expiresAt > Date.now()) return cached;
+  const pending = fundamentalsRequests.get(symbol);
+  if (pending) return pending;
+  if (!env.FINNHUB_API_KEY) {
+    throw Object.assign(new Error("Finnhub fundamentals are not configured."), { code: "fundamentals_not_configured", status: 503 });
+  }
+
+  const profileUrl = new URL("https://finnhub.io/api/v1/stock/profile2");
+  profileUrl.searchParams.set("symbol", symbol);
+  const metricsUrl = new URL("https://finnhub.io/api/v1/stock/metric");
+  metricsUrl.searchParams.set("symbol", symbol);
+  metricsUrl.searchParams.set("metric", "all");
+
+  let request;
+  request = (async () => {
+    const [profileResponse, metricsResponse] = await Promise.all([
+      fetchFinnhubJson(profileUrl.toString(), env.FINNHUB_API_KEY),
+      fetchFinnhubJson(metricsUrl.toString(), env.FINNHUB_API_KEY),
+    ]);
+    if (!profileResponse.ok && !metricsResponse.ok) {
+      throw Object.assign(new Error("Finnhub fundamentals are temporarily unavailable."), { code: "fundamentals_upstream_unavailable", status: 502 });
+    }
+
+    const profile = profileResponse.ok ? profileResponse.payload : {};
+    const metric = metricsResponse.ok && isRecord(metricsResponse.payload.metric)
+      ? metricsResponse.payload.metric
+      : {};
+    const marketCapitalizationMillions = finiteNumber(profile.marketCapitalization);
+    const marketCapitalization = marketCapitalizationMillions !== null && marketCapitalizationMillions > 0
+      ? marketCapitalizationMillions * 1_000_000
+      : null;
+    const peMetric = finiteNumber(metric.peTTM) ?? finiteNumber(metric.peBasicExclExtraTTM);
+    let weekHigh = finiteNumber(metric["52WeekHigh"]);
+    let weekLow = finiteNumber(metric["52WeekLow"]);
+    if (weekHigh !== null && weekLow !== null && weekHigh < weekLow) {
+      weekHigh = null;
+      weekLow = null;
+    }
+    const currency = typeof profile.currency === "string" && /^[A-Z]{3}$/i.test(profile.currency)
+      ? profile.currency.toUpperCase()
+      : marketCapitalization !== null ? "USD" : null;
+    const bothProvidersAvailable = profileResponse.ok && metricsResponse.ok;
+    const ttl = bothProvidersAvailable ? 15 * 60_000 : 30_000;
+    const payload = {
+      symbol,
+      marketCap: {
+        value: marketCapitalization,
+        currency,
+        source: marketCapitalization === null ? null : "Finnhub Company Profile 2",
+      },
+      peRatio: {
+        value: peMetric,
+        source: peMetric === null ? null : "Finnhub Basic Financials · TTM",
+      },
+      weekHigh: {
+        value: weekHigh !== null && weekHigh > 0 ? weekHigh : null,
+        source: weekHigh !== null && weekHigh > 0 ? "Finnhub Basic Financials · 52-week range" : null,
+      },
+      weekLow: {
+        value: weekLow !== null && weekLow > 0 ? weekLow : null,
+        source: weekLow !== null && weekLow > 0 ? "Finnhub Basic Financials · 52-week range" : null,
+      },
+    };
+    const result = { payload, expiresAt: Date.now() + ttl, ttl };
+    if (fundamentalsCache.size >= 500 && !fundamentalsCache.has(symbol)) {
+      const oldestKey = fundamentalsCache.keys().next().value;
+      if (oldestKey) fundamentalsCache.delete(oldestKey);
+    }
+    fundamentalsCache.set(symbol, result);
+    return result;
+  })().finally(() => fundamentalsRequests.delete(symbol));
+
+  fundamentalsRequests.set(symbol, request);
+  return request;
+}
+
+async function getFundamentals(request, env, symbol) {
+  if (!isValidStockSymbol(symbol)) {
+    return jsonResponse(request, env, { error: "Unsupported stock symbol." }, 404);
+  }
+  if (!env.FINNHUB_API_KEY) {
+    return jsonResponse(request, env, { error: "Fundamental market data is not configured." }, 503);
+  }
+  if (isRateLimited(request, 30)) {
+    return jsonResponse(request, env, { error: "Too many fundamentals requests. Please retry shortly." }, 429);
+  }
+
+  try {
+    const result = await loadFinnhubFundamentals(env, symbol);
+    const cacheControl = result.ttl > 30_000
+      ? "public, max-age=60, s-maxage=900, stale-while-revalidate=3600"
+      : "public, max-age=15, s-maxage=30, stale-while-revalidate=60";
+    return jsonResponse(request, env, result.payload, 200, { "Cache-Control": cacheControl });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Finnhub fundamentals are temporarily unavailable.";
+    const code = error && typeof error === "object" && "code" in error ? error.code : "fundamentals_upstream_unavailable";
+    const status = error && typeof error === "object" && "status" in error ? error.status : 502;
+    return jsonResponse(request, env, { error: message, code }, status);
+  }
+}
+
 function isRecord(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -754,6 +875,11 @@ export default {
     const quoteMatch = url.pathname.match(/^\/api\/market\/quote\/([A-Za-z0-9.-]+)$/);
     if (request.method === "GET" && quoteMatch) {
       return getQuote(request, env, quoteMatch[1].toUpperCase());
+    }
+
+    const fundamentalsMatch = url.pathname.match(/^\/api\/market\/fundamentals\/([A-Za-z0-9.-]+)$/);
+    if (request.method === "GET" && fundamentalsMatch) {
+      return getFundamentals(request, env, fundamentalsMatch[1].toUpperCase());
     }
 
     return jsonResponse(request, env, { error: "Not found." }, 404);

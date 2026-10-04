@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-**V5.2 Daily Brief 已接入真实 GLM 生成。** AI Assistant 与首页 Daily Brief 通过 Cloudflare Worker 调用智谱 `glm-4-flash-250414`；Daily Brief 使用 Watchlist、Portfolio、Finnhub 报价、Massive 1M 历史摘要、Investment Memory 和 Investment Notes。成功内容与生成时间保存在本机 localStorage，同日可重复打开查看；只有点击生成/刷新时才调用 AI。AI Key 仅存放在 Cloudflare Worker Secret，不写入 `.env`、源码或仓库。个人数据仍保存在当前设备，未请求 AI 时不会离开浏览器；Brief 失败会重试一次，之后保留上次成功内容或显示友好提示。
+**V5.4 Real Fundamentals 已接入股票详情页。** 打开详情时，Cloudflare Worker 才请求 Finnhub Company Profile 2 与 Basic Financials；Market Cap、P/E、52 Week High/Low 显示真实来源或明确的 Unavailable。Finnhub 没有提供 52 周区间时，复用 Massive 1Y 日线缓存计算；API Key 继续保留在 Worker Secret。V5.2 Daily Brief 与 AI Assistant 继续通过 Worker 调用智谱 `glm-4-flash-250414`；Brief 使用 Watchlist、Portfolio、Finnhub 报价、Massive 历史摘要、Investment Memory 和 Investment Notes。个人投资数据仍保存在当前设备。
 
 ## 开发阶段
 
@@ -17,6 +17,7 @@
 - V4：Personal Investment System（已完成，本机 localStorage）
 - V5 第一阶段：供应商中立的 OpenAI-Compatible AI API 接入（智谱 `glm-4-flash-250414`；真实对话已验收）
 - V5.2：首页 Daily Brief 真实 AI 生成与本机当日缓存
+- V5.4：详情页真实基础指标与 52 周区间回退计算
 - STEP 5：用户系统和数据库
 - STEP 6：个人 AI 投资助手
 
@@ -32,6 +33,7 @@
 - Dashboard 首页用本地持仓数量与真实历史收盘价计算一个月持仓价值趋势；没有持仓或历史接口不可用时显示空态
 - NVDA、AAPL、TSLA、MSFT、AMZN 的实时行情、关注列表和股票详情；报价保留 Mock Data 回退
 - Overview / Watchlist 的真实一个月 mini chart；详情页按需请求 Massive 真实 OHLC K 线和 1D / 1W / 1M / 3M / 1Y 周期
+- 详情页按需读取 Finnhub Market Cap、TTM P/E 和 52 周区间；不可用字段明确标为 N/A / Unavailable，缺少 52 周字段时用 Massive 1Y 真实日线计算
 - 行情来源、Loading、限流和 Last updated 状态；历史 API 失败时优先显示真实缓存并自动延迟重试，不伪造价格曲线
 - Light / Dark Mode，首次跟随系统主题并保存用户选择
 - Portfolio 新增、编辑和删除个人持仓；按 Finnhub 当前价格计算市值、成本和未实现盈亏

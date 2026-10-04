@@ -8,12 +8,50 @@ import { MarketDataStatusMessage } from "@/components/market-data-status";
 import { InvestmentMemoryEditor } from "@/components/investment-memory-editor";
 import { useMarketHistory } from "@/hooks/use-market-history";
 import { useStockMarketData } from "@/hooks/use-stock-market-data";
+import { useStockFundamentals } from "@/hooks/use-stock-fundamentals";
 import { formatHistoryTimestamp, marketHistoryRanges, type MarketHistoryRange } from "@/data/market-history";
+import type { RealMarketMetric } from "@/data/market-fundamentals";
 import type { Stock } from "@/data/stocks";
+
+function compactMarketCap(value: number, currency: string | null) {
+  const prefix = currency === "USD" ? "$" : currency ? currency + " " : "";
+  const units: Array<[number, string]> = [
+    [1_000_000_000_000, "T"],
+    [1_000_000_000, "B"],
+    [1_000_000, "M"],
+  ];
+  const unit = units.find(([threshold]) => Math.abs(value) >= threshold);
+  if (!unit) return prefix + new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value);
+  const amount = value / unit[0];
+  const fractionDigits = Math.abs(amount) >= 100 ? 0 : 1;
+  return prefix + new Intl.NumberFormat("en-US", { maximumFractionDigits: fractionDigits }).format(amount) + unit[1];
+}
+
+function FundamentalMetricCard({
+  label,
+  metric,
+  status,
+  format,
+}: {
+  label: string;
+  metric: RealMarketMetric;
+  status: "loading" | "ready";
+  format: (value: number, metric: RealMarketMetric) => string;
+}) {
+  const available = metric.value !== null;
+  return (
+    <div className="card stock-metric-card">
+      <span className="eyebrow">{label}</span>
+      <strong>{available ? format(metric.value as number, metric) : status === "loading" ? "Loading…" : "N/A"}</strong>
+      <span>{available ? "Real data · " + (metric.source || "Market API") : status === "loading" ? "Loading real data…" : "Unavailable"}</span>
+    </div>
+  );
+}
 
 export function StockDetailClient({ initialStock }: { initialStock: Stock }) {
   const marketData = useStockMarketData({ activeStock: initialStock });
   const stock = marketData.stocks.find((item) => item.symbol === initialStock.symbol) ?? initialStock;
+  const fundamentals = useStockFundamentals(stock.symbol);
   const [range, setRange] = useState<MarketHistoryRange>("1M");
   const historical = useMarketHistory(stock.symbol, range);
   const points = historical.points;
@@ -93,10 +131,30 @@ export function StockDetailClient({ initialStock }: { initialStock: Stock }) {
         <div className="card stock-metric-card"><span className="eyebrow">HIGH</span><strong>{stock.high > 0 ? "$" + stock.high.toFixed(2) : "—"}</strong><span>Live Quotes / Market Data · Finnhub</span></div>
         <div className="card stock-metric-card"><span className="eyebrow">LOW</span><strong>{stock.low > 0 ? "$" + stock.low.toFixed(2) : "—"}</strong><span>Live Quotes / Market Data · Finnhub</span></div>
         <div className="card stock-metric-card"><span className="eyebrow">PREVIOUS CLOSE</span><strong>{stock.previousClose > 0 ? "$" + stock.previousClose.toFixed(2) : "—"}</strong><span>Live Quotes / Market Data · Finnhub</span></div>
-        <div className="card stock-metric-card"><span className="eyebrow">MARKET CAP</span><strong>{stock.marketCap}</strong><span>Mock Data</span></div>
-        <div className="card stock-metric-card"><span className="eyebrow">PRICE / EARNINGS</span><strong>{stock.peRatio}<small>x</small></strong><span>Mock Data</span></div>
-        <div className="card stock-metric-card"><span className="eyebrow">52 WEEK HIGH</span><strong>{stock.weekHigh > 0 ? "$" + stock.weekHigh.toFixed(2) : "—"}</strong><span>Mock Data</span></div>
-        <div className="card stock-metric-card"><span className="eyebrow">52 WEEK LOW</span><strong>{stock.weekLow > 0 ? "$" + stock.weekLow.toFixed(2) : "—"}</strong><span>Mock Data</span></div>
+        <FundamentalMetricCard
+          label="MARKET CAP"
+          metric={fundamentals.data.marketCap}
+          status={fundamentals.status}
+          format={(value, metric) => compactMarketCap(value, metric.currency)}
+        />
+        <FundamentalMetricCard
+          label="PRICE / EARNINGS"
+          metric={fundamentals.data.peRatio}
+          status={fundamentals.status}
+          format={(value) => new Intl.NumberFormat("en-US", { maximumFractionDigits: Math.abs(value) >= 100 ? 1 : 2 }).format(value) + "x"}
+        />
+        <FundamentalMetricCard
+          label="52 WEEK HIGH"
+          metric={fundamentals.data.weekHigh}
+          status={fundamentals.status}
+          format={(value) => "$" + value.toFixed(2)}
+        />
+        <FundamentalMetricCard
+          label="52 WEEK LOW"
+          metric={fundamentals.data.weekLow}
+          status={fundamentals.status}
+          format={(value) => "$" + value.toFixed(2)}
+        />
       </div>
 
       <section className="card ai-insight-card">

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-04
+
+- V5.4: replace the stock-detail Market Cap, P/E, and 52 Week High/Low mock snapshots with on-demand Finnhub fundamentals. Missing 52-week values fall back to a calculation over cached Massive 1Y daily candles; every value shows its real source or an explicit Unavailable state.
+- Add a cached Cloudflare Worker fundamentals endpoint, keeping Finnhub credentials server-side and limiting requests to stock-detail views.
+
 ## 2026-09-30
 
 - V5.2: replaced the homepage's simulated Daily Brief with a manual GLM generation flow through the existing Cloudflare Worker. It sends live Finnhub quotes, Massive 1M history summaries, Watchlist, local Portfolio, Investment Memory, and Investment Notes; successful output is cached locally with its generation time, and a failed refresh retries once while retaining the prior successful brief.
