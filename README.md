@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-**V6 Supabase Auth 与个人数据云同步已接入代码，等待现有 Supabase 项目的 SQL 与公开前端配置后完成线上验收。** 已为 Watchlist、Portfolio、Investment Memory、Investment Notes 增加独立数据表和 RLS setup；访客继续使用 localStorage，登录用户以 Supabase 为主数据源。localStorage 导入必须由用户点击确认，且只允许导入到四张云表全部为空的账号。部署 SQL 和所需变量见下文。V5.4 fundamentals、V5.2 Daily Brief 与 AI Assistant 继续使用现有 Finnhub、Massive 和 Cloudflare Worker 路径。
+**当前版本：V6 COMPLETE。** Supabase Auth 与四类个人数据云同步已在线启用，用户已验收登录、首次本地导入、CRUD、退出重登和多设备同步。访客继续使用 localStorage；Finnhub、Massive 与 AI API Secret 架构保持原样。
 
 ## 开发阶段
 
@@ -15,12 +15,12 @@
 - STEP 2：GitHub Pages 静态网站部署（已采用）
 - STEP 2.5：Cloudflare Worker 行情代理（已部署并通过公网验证）
 - V4：Personal Investment System（本机 localStorage fallback）
-- V5 第一阶段：供应商中立的 OpenAI-Compatible AI API 接入（智谱 `glm-4-flash-250414`；真实对话已验收）
-- V5.2：首页 Daily Brief 真实 AI 生成与本机当日缓存
-- V5.4：详情页真实基础指标与 52 周区间回退计算
-- V6：Supabase Auth 与四类个人数据跨设备同步（代码已接入，等待 SQL 与公开前端配置）
-- STEP 5：Supabase 用户系统和数据库（V6 实现待项目配置）
-- STEP 6：个人 AI 投资助手
+- V5：真实 GLM AI Assistant ✅
+- V5.1：连续对话稳定性 ✅
+- V5.2：真实 AI Daily Brief ✅
+- V5.3：Stock Universe 与动态 Watchlist ✅
+- V5.4：Real Fundamentals / 去除明显 Mock ✅
+- V6：Supabase Auth 与跨设备个人数据同步 ✅
 
 ## 开发原则
 
@@ -75,17 +75,17 @@ node node_modules/wrangler/bin/wrangler.js deploy --config api-proxy/wrangler.js
 
 ## 后续计划
 
-未登录时个人数据保存在设备本地；登录时 AI Assistant 与 Daily Brief 使用已加载的 Supabase 个人数据。每次发送时仍仅按请求经 Worker 转发给配置的 AI 服务。当前不包含联网搜索、新闻抓取、自动投资或 Realtime 同步。真实智谱 AI 对话已通过线上 Worker 验收。
+登录后 AI Assistant 与 Daily Brief 使用当前 Supabase 数据；未登录时使用本地数据。数据在刷新时从云端同步，当前不使用 Realtime。后续方向（Future，不在本次范围）：AI 联网新闻/财报/实时事件、更完整的 Portfolio Health、Daily/Morning Brief 自动化。
 
-## Supabase V6 配置
+## Supabase V6 数据与同步
 
-继续使用现有 `lanlan-cloud-pet` Supabase Project，不要创建新项目。把 [`supabase/v6-setup.sql`](supabase/v6-setup.sql) 的全部内容一次性复制到该项目的 Supabase SQL Editor 执行；脚本只创建 AI Investment Dashboard 自己的四张表、RLS、更新时间触发器和受保护的本地导入 RPC。
+继续复用现有 `lanlan-cloud-pet` Supabase Project。已执行 [`supabase/v6-setup.sql`](supabase/v6-setup.sql)，为本应用创建独立表 `investment_watchlist`、`investment_portfolio`、`investment_memories`、`investment_notes`；每张表的 RLS policy 使用 `auth.uid() = user_id`。登录后 Supabase 是主数据源，未登录时使用 localStorage；首次登录仅在云端四类数据全空时提供确认导入。本地数据导入后保留作备份。多设备在刷新时同步，当前不需要 Realtime。
 
-本地 `.env.local` 与 GitHub Actions Repository Variables 都需要以下公开变量：
+线上 GitHub Actions Repository Variables 已配置：
 
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`（推荐）；没有 publishable key 时可用 `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 
-这些是浏览器端可见的 Supabase Project URL 与 publishable/anon key；不要配置 `service_role`、数据库密码或其他 Secret。未配置这些变量时，网站仍可作为访客使用 localStorage，但登录/云同步不可用。修改 GitHub Repository Variables 后重新运行 Pages workflow。
+本地开发如需测试云同步，可在被 `.gitignore` 排除的 `.env.local` 中配置同名变量。浏览器只使用 Project URL 与 publishable key；`service_role`、数据库密码和 AI/Finnhub/Massive secrets 不进入前端。
 
 详见 [开发路线](docs/ROADMAP.md)、[产品说明](docs/PRODUCT.md) 和 [技术方案](docs/TECH_STACK.md)。

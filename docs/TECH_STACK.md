@@ -5,7 +5,7 @@
 | Frontend | Next.js 16 + TypeScript + App Router | 当前采用 |
 | UI | Tailwind CSS 4 + custom CSS | 当前采用 |
 | Charts | Inline SVG close-price charts and OHLC candlesticks from Massive | Overview / Watchlist 1M; details 1D / 1W / 1M / 3M / 1Y; no mock history fallback |
-| Database | Supabase | 现有 `lanlan-cloud-pet` Project；V6 用户数据表/RLS setup 已提供，等待 SQL 与公开配置 |
+| Database | Supabase | 复用现有 `lanlan-cloud-pet` Project；V6 四张独立表已创建，RLS 使用 `auth.uid() = user_id`，线上配置已启用 |
 | AI | OpenAI-Compatible Chat Completions via Cloudflare Worker | Zhipu `glm-4-flash-250414`; `AI_API_KEY` Worker Secret; Daily Brief retries once and keeps the last successful result |
 | Stock Data | Finnhub quotes and Massive history via Cloudflare Worker | Finnhub supplies current quotes; Massive supplies historical OHLC. API keys stay in server-only Worker secrets. |
 | UI Theme | CSS theme tokens + localStorage | Light / Dark，可首次跟随系统偏好 |

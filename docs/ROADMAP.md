@@ -24,18 +24,32 @@ V1–V3 现有产品结构保留。AI Assistant 已通过 Cloudflare Worker 接�
 
 已完成可编辑的本地持仓、基于 Finnhub 行情的持仓估值与未实现盈亏、每只股票的 Investment Memory、Investment Notes，以及引用这些本机数据的 Mock AI Personal Context。数据保存在当前设备的 localStorage，不跨设备同步；V4 不接入 OpenAI API、Supabase、登录或自动交易。
 
-## V5 第一阶段：国产 OpenAI-Compatible AI API
+## V5：真实 GLM AI Assistant ✅
 
 已完成通用 Worker Chat Completions 路由、个人上下文装配、Thinking / API unavailable / 模型状态和 Mock fallback。线上使用智谱 `glm-4-flash-250414`，API Key 保存在 Worker Secret，真实对话已验收。
 
-## V5.2：首页 Daily Brief 真实生成
+## V5.1：连续对话稳定性 ✅
 
-已将首页 Daily Brief 接入现有 GLM Worker。用户手动生成时使用 Watchlist、Portfolio、Finnhub 当前报价、Massive 1M 历史摘要、Investment Memory 和 Investment Notes；成功结果与生成时间写入本机 localStorage，刷新时不自动重复请求。失败重试一次，保留上次成功内容或显示友好提示。
+多轮 Assistant 对话稳定性已验收。
 
-## V6：Supabase Auth 与个人数据跨设备同步
+## V5.2：真实 AI Daily Brief ✅
 
-前端与独立数据表/RLS setup 已实现，继续使用现有 `lanlan-cloud-pet` Supabase Project。登录用户从 Supabase 同步 Watchlist、Portfolio、Investment Memory、Investment Notes；访客保留 localStorage。需先执行 `supabase/v6-setup.sql` 并配置公开 Project URL 与 publishable/anon key，再完成认证、导入、RLS、AI context 和跨设备验收。
+首页 Daily Brief 使用现有 GLM Worker。手动生成时使用当前 Watchlist、Portfolio、Finnhub 报价、Massive 1M 历史摘要、Investment Memory 和 Investment Notes；成功结果及时间写入本机 localStorage。失败重试一次并保留上次成功内容。
 
-## STEP 6：个人 AI 投资助手
+## V5.3：Stock Universe 与动态 Watchlist ✅
 
-在行情、用户数据和 AI 能力基础上迭代个人化投资研究体验。
+已完成 Massive Stock Universe 搜索和动态 Watchlist；Overview、市场数据请求与个人上下文使用当前 Watchlist。
+
+## V5.4：Real Fundamentals / 去除明显 Mock ✅
+
+详情页 fundamentals 使用 Finnhub 数据；52 周区间在 Finnhub 字段缺失时由 Massive 1Y 日线计算，并标示真实来源或不可用状态。
+
+## V6：Supabase Auth 与跨设备个人数据同步 ✅
+
+继续复用现有 `lanlan-cloud-pet` Supabase Project。四张独立表为 `investment_watchlist`、`investment_portfolio`、`investment_memories`、`investment_notes`；RLS 限制为 `auth.uid() = user_id`。登录后 Supabase 是主数据源，访客继续使用 localStorage。首次登录仅在云端四类数据全部为空时提供用户确认导入，导入后本地副本保留。用户已人工验收登录、导入、四类数据 CRUD、退出重登及跨设备刷新同步。AI Assistant 与 Daily Brief 使用当前同步数据；当前刷新后同步，不启用 Realtime。Finnhub、Massive 和 AI API Secret 架构未改变。
+
+## Future（未开发）
+
+- AI 联网新闻、财报与实时事件
+- 更完整的 Portfolio Health
+- Daily / Morning Brief 自动化

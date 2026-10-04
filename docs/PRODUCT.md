@@ -8,6 +8,10 @@ AI-investment-dashboard
 
 AI Investment Dashboard，一个个人 AI 投资研究控制台
 
+## 当前状态
+
+**V6 COMPLETE。** 登录、首次本地数据导入、个人数据云同步、退出重登及跨设备刷新同步已由用户人工验收。
+
 ## MVP V1 目标
 
 快速上线一个具有 Apple 风格 UI 的投资 Dashboard。
@@ -30,5 +34,11 @@ AI Investment Dashboard，一个个人 AI 投资研究控制台
 - AI Assistant 支持通过 Cloudflare Worker 调用通用 OpenAI-Compatible 对话接口；发送时附带 Watchlist、Portfolio、真实 Finnhub 报价、Investment Memory 和 Investment Notes，接口失败时回退 Mock。
 - 未登录时 Watchlist、持仓、投资记忆和日志保存在当前设备 localStorage；登录后这四类个人数据以 Supabase 为主数据源，AI 请求使用当前加载的数据并经 Worker 转发到配置的 AI 服务。
 - 首次登录只会在四张云表全部为空时提供用户确认的本地导入；登出不会将账号云数据写回本机 localStorage。
+- Supabase 使用现有 `lanlan-cloud-pet` Project 中独立的 `investment_watchlist`、`investment_portfolio`、`investment_memories`、`investment_notes` 四表；RLS policy 限定 `auth.uid() = user_id`。
+- AI Daily Brief 与 Assistant 使用当前 Provider 数据：登录时来自 Supabase，访客时来自 localStorage。Brief 继续通过现有 Worker 手动生成并在本机缓存；V6 不引入 Realtime。
 
-每日市场简报和部分基本面仍使用产品 Mock Data。AI 通过 `AI_BASE_URL`、`AI_API_KEY`、`AI_MODEL` 配置兼容服务；API Key 仅配置在 Cloudflare Worker Secret。V5 当前线上模型为智谱 `glm-4-flash-250414`，真实对话已验收。
+股票详情的 fundamentals 使用 Finnhub 数据及 Massive 52 周区间计算；实时报价仍保留明确的 Mock fallback，历史图表不使用模拟曲线。Finnhub、Massive 与 AI API secrets 继续只由现有 Cloudflare Worker 读取。
+
+## Future（未开发）
+
+AI 联网新闻/财报/实时事件、更完整的 Portfolio Health、Daily/Morning Brief 自动化。
