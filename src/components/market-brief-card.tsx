@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/icons";
 import { usePersonalData } from "@/components/personal-data-provider";
-import { stocks } from "@/data/stocks";
 import { marketApiUrl } from "@/data/market-api";
 import { useStockMarketData } from "@/hooks/use-stock-market-data";
 
@@ -238,7 +237,7 @@ export function MarketBriefCard() {
       setFeedback("A brief needs live Finnhub quotes and Massive historical prices. They are currently unavailable; your last successful brief is unchanged.");
       return;
     }
-    const marketSnapshot: MarketSnapshotSignal[] = stocks.map((stock) => {
+    const marketSnapshot: MarketSnapshotSignal[] = marketData.stocks.map((stock) => {
       const quote = marketData.liveQuotes[stock.symbol];
       const history = marketHistory.find((summary) => summary.symbol === stock.symbol);
       return {
@@ -292,7 +291,7 @@ export function MarketBriefCard() {
         "Write the brief in concise English. Do not include Markdown fences or text outside the JSON object.",
       ].join("\n"),
       context: {
-        watchlist: stocks.map((stock) => ({
+        watchlist: marketData.stocks.map((stock) => ({
           symbol: stock.symbol,
           name: stock.name,
           sector: stock.sector,
