@@ -51,6 +51,7 @@ function FundamentalMetricCard({
 export function StockDetailClient({ initialStock }: { initialStock: Stock }) {
   const marketData = useStockMarketData({ activeStock: initialStock });
   const stock = marketData.stocks.find((item) => item.symbol === initialStock.symbol) ?? initialStock;
+  const liveQuote = marketData.liveQuotes[stock.symbol];
   const fundamentals = useStockFundamentals(stock.symbol);
   const [range, setRange] = useState<MarketHistoryRange>("1M");
   const historical = useMarketHistory(stock.symbol, range);
@@ -67,7 +68,7 @@ export function StockDetailClient({ initialStock }: { initialStock: Stock }) {
     ))];
     return indices.map((index) => formatHistoryTimestamp(points[index].timestamp, range));
   }, [points, range]);
-  const quotePositive = stock.changePercent >= 0;
+  const quotePositive = (liveQuote?.changePercent ?? 0) >= 0;
 
   return (
     <div className="page-stack page-enter stock-detail-page">
@@ -79,8 +80,10 @@ export function StockDetailClient({ initialStock }: { initialStock: Stock }) {
           <div><div className="stock-symbol-line"><h1>{stock.symbol}</h1><span className="sector-chip">{stock.exchange || stock.sector}</span></div><p>{stock.name}</p></div>
         </div>
         <div className="stock-detail-price">
-          <strong>{stock.price > 0 ? "$" + stock.price.toFixed(2) : "—"}</strong>
-          <span className={quotePositive ? "positive-text" : "negative-text"}>{quotePositive ? "+" : ""}{stock.change.toFixed(2)} ({quotePositive ? "+" : ""}{stock.changePercent.toFixed(2)}%) today</span>
+          <strong>{liveQuote ? "$" + liveQuote.price.toFixed(2) : "N/A"}</strong>
+          <span className={liveQuote ? quotePositive ? "positive-text" : "negative-text" : ""}>
+            {liveQuote ? `${quotePositive ? "+" : ""}${liveQuote.change.toFixed(2)} (${quotePositive ? "+" : ""}${liveQuote.changePercent.toFixed(2)}%) today` : "Finnhub quote unavailable"}
+          </span>
           <MarketDataStatusMessage
             status={marketData.status}
             failedSymbols={marketData.failedSymbols}
@@ -108,7 +111,7 @@ export function StockDetailClient({ initialStock }: { initialStock: Stock }) {
           </div>
         </div>
         <div className="stock-chart-value">
-          <span>{stock.price > 0 ? "$" + stock.price.toFixed(2) : "—"}</span>
+          <span>{liveQuote ? "$" + liveQuote.price.toFixed(2) : "N/A"}</span>
           <span className={chartPositive === undefined ? "" : chartPositive ? "positive-text" : "negative-text"}>
             {rangePercent === null ? "—" : (rangePercent >= 0 ? "+" : "") + rangePercent.toFixed(2) + "%"} {range}
           </span>
@@ -121,16 +124,16 @@ export function StockDetailClient({ initialStock }: { initialStock: Stock }) {
           <>
             <CandlestickChart data={points} label={stock.symbol + " real Massive OHLC candles for " + range} />
             <div className="chart-x-axis">{axisLabels.map((label, index) => <span key={index}>{label}</span>)}</div>
-            <p className="chart-data-note">Historical Market Data · Massive · Live quotes from Finnhub</p>
+            <p className="chart-data-note">Historical Market Data · Massive{liveQuote ? " · Live quotes from Finnhub" : " · Current quote unavailable"}</p>
           </>
         )}
       </section>
 
       <div className="stock-metric-grid">
-        <div className="card stock-metric-card"><span className="eyebrow">OPEN</span><strong>{stock.open > 0 ? "$" + stock.open.toFixed(2) : "—"}</strong><span>Live Quotes / Market Data · Finnhub</span></div>
-        <div className="card stock-metric-card"><span className="eyebrow">HIGH</span><strong>{stock.high > 0 ? "$" + stock.high.toFixed(2) : "—"}</strong><span>Live Quotes / Market Data · Finnhub</span></div>
-        <div className="card stock-metric-card"><span className="eyebrow">LOW</span><strong>{stock.low > 0 ? "$" + stock.low.toFixed(2) : "—"}</strong><span>Live Quotes / Market Data · Finnhub</span></div>
-        <div className="card stock-metric-card"><span className="eyebrow">PREVIOUS CLOSE</span><strong>{stock.previousClose > 0 ? "$" + stock.previousClose.toFixed(2) : "—"}</strong><span>Live Quotes / Market Data · Finnhub</span></div>
+        <div className="card stock-metric-card"><span className="eyebrow">OPEN</span><strong>{liveQuote && liveQuote.open > 0 ? "$" + liveQuote.open.toFixed(2) : "N/A"}</strong><span>{liveQuote && liveQuote.open > 0 ? "Real data · Finnhub" : "Unavailable"}</span></div>
+        <div className="card stock-metric-card"><span className="eyebrow">HIGH</span><strong>{liveQuote && liveQuote.high > 0 ? "$" + liveQuote.high.toFixed(2) : "N/A"}</strong><span>{liveQuote && liveQuote.high > 0 ? "Real data · Finnhub" : "Unavailable"}</span></div>
+        <div className="card stock-metric-card"><span className="eyebrow">LOW</span><strong>{liveQuote && liveQuote.low > 0 ? "$" + liveQuote.low.toFixed(2) : "N/A"}</strong><span>{liveQuote && liveQuote.low > 0 ? "Real data · Finnhub" : "Unavailable"}</span></div>
+        <div className="card stock-metric-card"><span className="eyebrow">PREVIOUS CLOSE</span><strong>{liveQuote && liveQuote.previousClose > 0 ? "$" + liveQuote.previousClose.toFixed(2) : "N/A"}</strong><span>{liveQuote && liveQuote.previousClose > 0 ? "Real data · Finnhub" : "Unavailable"}</span></div>
         <FundamentalMetricCard
           label="MARKET CAP"
           metric={fundamentals.data.marketCap}
@@ -160,9 +163,9 @@ export function StockDetailClient({ initialStock }: { initialStock: Stock }) {
       <section className="card ai-insight-card">
         <div className="ai-insight-icon"><Icon name="sparkles" size={19} /></div>
         <div className="ai-insight-content">
-          <div className="ai-insight-heading"><span className="eyebrow">AI INSIGHT</span><span className="mock-label"><i /> MOCK ANALYSIS</span></div>
-          <p>“{stock.insight}”</p>
-          <span className="ai-insight-disclaimer">Generated from product mock data. Not investment advice.</span>
+          <div className="ai-insight-heading"><span className="eyebrow">AI INSIGHT</span><span className="mock-label"><i /> UNAVAILABLE</span></div>
+          <p>A live AI insight is not available on this stock page.</p>
+          <span className="ai-insight-disclaimer">Use the assistant to request a current analysis.</span>
         </div>
         <Link href={"/assistant?prompt=" + encodeURIComponent("Analyze " + stock.symbol)} className="primary-button ask-stock-button">Ask AI about {stock.symbol} <Icon name="arrow-up-right" size={15} /></Link>
       </section>

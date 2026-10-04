@@ -17,11 +17,11 @@ export function OverviewWatchlist() {
         <SectionHeading eyebrow="YOUR MARKET RADAR" title="Watchlist" action={<Link href="/watchlist" className="subtle-link">See all <Icon name="arrow-right" size={14} /></Link>} />
         <span className={"watchlist-live overview-live-status market-state-" + marketData.status}>
           <i className="live-dot" />
-          {marketData.status === "loading" ? "LOADING" : marketData.status === "live" ? "LIVE QUOTES" : marketData.status === "partial" ? "PARTIAL" : "MOCK DATA"}
+          {marketData.status === "loading" ? "LOADING" : marketData.status === "live" ? "LIVE QUOTES" : marketData.status === "partial" ? "PARTIAL" : marketData.stocks.length === 0 ? "NO QUOTES" : "UNAVAILABLE"}
         </span>
       </div>
       <div className="watchlist-rows">
-        {marketData.stocks.slice(0, 8).map((stock) => <StockRow key={stock.symbol} stock={stock} history={marketData.history[stock.symbol]} onRemove={watchlist.remove} />)}
+        {marketData.stocks.slice(0, 8).map((stock) => <StockRow key={stock.symbol} stock={stock} quote={marketData.liveQuotes[stock.symbol] ?? null} history={marketData.history[stock.symbol]} onRemove={watchlist.remove} />)}
         {marketData.stocks.length === 0 && <div className="overview-watchlist-empty">Your Watchlist is empty. Add a stock from Watchlist.</div>}
       </div>
       <MarketHistoryStatusMessage status={marketData.historyStatus} failedSymbols={marketData.failedHistorySymbols} />

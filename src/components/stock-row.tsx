@@ -5,13 +5,16 @@ import { referenceFromStock, stockDetailHref } from "@/data/stock-universe";
 import type { MiniHistoryState } from "@/hooks/use-stock-market-data";
 import { Icon } from "@/components/icons";
 import { Sparkline } from "@/components/charts";
+import type { LiveStockQuote } from "@/data/market-quotes";
 
 export function StockRow({
   stock,
+  quote,
   history,
   onRemove,
 }: {
   stock: Stock;
+  quote: LiveStockQuote | null;
   history?: MiniHistoryState;
   onRemove: (symbol: string) => void;
 }) {
@@ -43,19 +46,14 @@ export function StockRow({
           )}
         </div>
         <div className="stock-price">
-          <strong>{"$" + stock.price.toFixed(2)}</strong>
+          <strong>{quote ? "$" + quote.price.toFixed(2) : "N/A"}</strong>
           <span
-            className={stock.changePercent >= 0 ? "positive-text" : "negative-text"}
-            title={
-              (stock.changePercent >= 0 ? "+" : "") + stock.change.toFixed(2) +
-              " (" + (stock.changePercent >= 0 ? "+" : "") + stock.changePercent.toFixed(2) + "%) today"
-            }
+            className={quote ? quote.changePercent >= 0 ? "positive-text" : "negative-text" : ""}
+            title={quote ? `${quote.change >= 0 ? "+" : ""}${quote.change.toFixed(2)} (${quote.changePercent >= 0 ? "+" : ""}${quote.changePercent.toFixed(2)}%) today` : "Finnhub quote unavailable"}
           >
-            {stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(2)}%
+            {quote ? `${quote.changePercent >= 0 ? "+" : ""}${quote.changePercent.toFixed(2)}%` : "Unavailable"}
           </span>
-          <small className={stock.change >= 0 ? "positive-text" : "negative-text"}>
-            {stock.change >= 0 ? "+$" : "-$"}{Math.abs(stock.change).toFixed(2)}
-          </small>
+          {quote && <small className={quote.change >= 0 ? "positive-text" : "negative-text"}>{quote.change >= 0 ? "+$" : "-$"}{Math.abs(quote.change).toFixed(2)}</small>}
         </div>
         <span className="stock-row-chevron"><Icon name="chevron-right" size={16} /></span>
       </Link>

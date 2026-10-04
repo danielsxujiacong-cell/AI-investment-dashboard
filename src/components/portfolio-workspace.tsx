@@ -32,24 +32,29 @@ export function PortfolioWorkspace() {
 
   const positions = useMemo(() => data.portfolio.map((holding) => {
     const stock = marketData.stocks.find((item) => item.symbol === holding.symbol);
+    const quote = marketData.liveQuotes[holding.symbol];
     const costBasis = holding.shares * holding.averageCost;
-    const currentValue = stock ? holding.shares * stock.price : null;
+    const currentPrice = quote?.price ?? null;
+    const currentValue = currentPrice === null ? null : holding.shares * currentPrice;
     const gainLoss = currentValue === null ? null : currentValue - costBasis;
     return {
       holding,
       stock,
+      currentPrice,
       costBasis,
       currentValue,
       gainLoss,
       gainLossPercent: gainLoss === null || costBasis === 0 ? null : (gainLoss / costBasis) * 100,
     };
-  }), [data.portfolio, marketData.stocks]);
+  }), [data.portfolio, marketData.stocks, marketData.liveQuotes]);
 
-  const totalValue = positions.reduce((sum, position) => sum + (position.currentValue ?? 0), 0);
+  const totalValue = positions.length === 0
+    ? 0
+    : positions.every((position) => position.currentValue !== null)
+      ? positions.reduce((sum, position) => sum + (position.currentValue ?? 0), 0)
+      : null;
   const totalCost = positions.reduce((sum, position) => sum + position.costBasis, 0);
-  const totalGainLoss = positions.every((position) => position.currentValue !== null)
-    ? totalValue - totalCost
-    : null;
+  const totalGainLoss = totalValue === null ? null : totalValue - totalCost;
   const totalGainLossPercent = totalGainLoss === null || totalCost === 0 ? null : (totalGainLoss / totalCost) * 100;
 
   function resetForm() {
@@ -117,7 +122,7 @@ export function PortfolioWorkspace() {
       <div className="portfolio-stat-grid">
         <section className="card portfolio-stat-card primary-stat">
           <span className="eyebrow">TOTAL PORTFOLIO VALUE</span>
-          <strong>{ready ? money(totalValue) : "—"}</strong>
+          <strong>{ready ? totalValue === null ? "N/A" : money(totalValue) : "—"}</strong>
           <span className="stat-foot">Based on current quotes</span>
         </section>
         <section className="card portfolio-stat-card">
@@ -175,7 +180,7 @@ export function PortfolioWorkspace() {
           </div>
         ) : (
           <div className="position-list">
-            {positions.map(({ holding, stock, costBasis, currentValue, gainLoss, gainLossPercent }) => (
+            {positions.map(({ holding, stock, costBasis, currentPrice, currentValue, gainLoss, gainLossPercent }) => (
               <article className="position-row" key={holding.id}>
                 <div className="position-row-header">
                   <Link href={stock ? `/stocks/${holding.symbol}` : "/watchlist"} className="position-identity">
@@ -190,12 +195,12 @@ export function PortfolioWorkspace() {
                 <div className="position-metrics">
                   <div className="position-metric"><span>SHARES</span><strong>{sharesLabel(holding.shares)}</strong></div>
                   <div className="position-metric"><span>AVERAGE COST</span><strong>{money(holding.averageCost)}</strong></div>
-                  <div className="position-metric"><span>CURRENT PRICE</span><strong>{stock ? money(stock.price) : "—"}</strong></div>
-                  <div className="position-metric"><span>CURRENT VALUE</span><strong>{currentValue === null ? "—" : money(currentValue)}</strong></div>
+                  <div className="position-metric"><span>CURRENT PRICE</span><strong>{currentPrice === null ? "N/A" : money(currentPrice)}</strong></div>
+                  <div className="position-metric"><span>CURRENT VALUE</span><strong>{currentValue === null ? "N/A" : money(currentValue)}</strong></div>
                   <div className="position-metric"><span>COST BASIS</span><strong>{money(costBasis)}</strong></div>
                   <div className="position-metric"><span>GAIN / LOSS</span>
                     <strong className={gainLoss === null ? "" : gainLoss >= 0 ? "positive-text" : "negative-text"}>
-                      {gainLoss === null ? "—" : `${gainLoss >= 0 ? "+" : ""}${money(gainLoss)}`}
+                      {gainLoss === null ? "N/A" : `${gainLoss >= 0 ? "+" : ""}${money(gainLoss)}`}
                     </strong>
                     <small>{gainLossPercent === null ? "" : `${gainLossPercent >= 0 ? "+" : ""}${gainLossPercent.toFixed(2)}%`}</small>
                   </div>

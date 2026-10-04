@@ -23,17 +23,19 @@ export function MarketDataStatusMessage({
 
   let message = "";
   if (status === "loading") {
-    message = "Loading Live Quotes / Market Data from Finnhub; Mock Data is shown until they arrive.";
+    message = "Loading Live Quotes / Market Data from Finnhub; unavailable values are shown until they arrive.";
   } else if (status === "live") {
     message = "Live Quotes / Market Data · Finnhub · " + updatedLabel;
   } else if (status === "partial") {
     message =
       "Live Quotes / Market Data · Finnhub unavailable for " +
       failedSymbols.join(", ") +
-      "; showing Mock Data for those symbols. " +
+      "; affected values are unavailable. " +
       updatedLabel;
   } else {
-    message = "Live Quotes / Market Data unavailable; showing Mock Data.";
+    message = failedSymbols.length > 0
+      ? "Live Quotes / Market Data unavailable for " + failedSymbols.join(", ") + "; affected values are unavailable."
+      : "No Watchlist stocks available for Live Quotes / Market Data.";
   }
 
   return (

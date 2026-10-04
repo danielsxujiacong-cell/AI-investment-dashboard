@@ -12,7 +12,7 @@ export default function AssistantPage() {
           <h1>AI Investment Assistant<span className="heading-period">.</span></h1>
           <p>A thoughtful research companion for your investing questions.</p>
         </div>
-        <div className="assistant-mode"><span className="assistant-mode-dot" /> MOCK MODE</div>
+        <div className="assistant-mode"><span className="assistant-mode-dot" /> RESEARCH MODE</div>
       </div>
       <AssistantConversation />
     </div>

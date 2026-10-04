@@ -24,11 +24,6 @@ export function OverviewPortfolioPerformance() {
     return [...sharesBySymbol.entries()];
   }, [data.portfolio]);
 
-  const stockBySymbol = useMemo(
-    () => new Map(marketData.stocks.map((stock) => [stock.symbol, stock])),
-    [marketData.stocks],
-  );
-
   const history = useMemo(() => {
     if (groups.length === 0) return [];
     const histories = groups.map(([symbol]) => marketData.history[symbol]);
@@ -59,15 +54,15 @@ export function OverviewPortfolioPerformance() {
   }, [groups, marketData.history]);
 
   const currentValue = groups.reduce((sum, [symbol, shares]) => {
-    const stock = stockBySymbol.get(symbol);
-    return sum + (stock ? shares * stock.price : 0);
+    const quote = marketData.liveQuotes[symbol];
+    return sum + (quote ? shares * quote.price : 0);
   }, 0);
   const todayGain = groups.reduce((sum, [symbol, shares]) => {
-    const stock = stockBySymbol.get(symbol);
-    return sum + (stock ? shares * stock.change : 0);
+    const quote = marketData.liveQuotes[symbol];
+    return sum + (quote ? shares * quote.change : 0);
   }, 0);
   const hasQuotes = ready && marketData.status !== "loading" &&
-    groups.every(([symbol]) => stockBySymbol.has(symbol));
+    groups.every(([symbol]) => Boolean(marketData.liveQuotes[symbol]));
   const hasHistoryError = groups
     .map(([symbol]) => marketData.history[symbol])
     .find((item) => item?.status === "error");
@@ -93,8 +88,8 @@ export function OverviewPortfolioPerformance() {
     : marketData.status === "live"
       ? "LIVE QUOTES / MARKET DATA"
       : marketData.status === "partial"
-        ? "PARTIAL MOCK FALLBACK"
-        : "MOCK DATA FALLBACK";
+        ? "PARTIAL QUOTES UNAVAILABLE"
+        : "QUOTES UNAVAILABLE";
 
   return (
     <section className="overview-card card">
@@ -107,11 +102,11 @@ export function OverviewPortfolioPerformance() {
           <div className={"overview-date market-state-" + marketData.status}><span className="live-dot" /> {quoteLabel}</div>
         </div>
         <div className="overview-change-row">
-          <span className={"change-pill " + (todayPositive ? "positive-text" : "negative-text")}>
-            <Icon name={todayPositive ? "arrow-up-right" : "arrow-down-right"} size={14} />
+          <span className={"change-pill " + (hasQuotes ? todayPositive ? "positive-text" : "negative-text" : "")}>
+            {hasQuotes && <Icon name={todayPositive ? "arrow-up-right" : "arrow-down-right"} size={14} />}
             {hasQuotes ? (todayPositive ? "+" : "") + money(todayGain) : "—"}
           </span>
-          <span className={"change-percent " + (todayPositive ? "positive-text" : "negative-text")}>
+          <span className={"change-percent " + (hasQuotes ? todayPositive ? "positive-text" : "negative-text" : "")}>
             {hasQuotes && currentValue - todayGain !== 0
               ? (todayGain >= 0 ? "+" : "") + (todayGain / (currentValue - todayGain) * 100).toFixed(2) + "%"
               : "—"}
@@ -158,10 +153,10 @@ export function OverviewPortfolioPerformance() {
       <aside className="overview-aside">
         <div className="aside-orbit orbit-one" /><div className="aside-orbit orbit-two" />
         <div className="aside-topline"><span>PORTFOLIO HEALTH</span><Icon name="more" size={17} /></div>
-        <div className="health-score"><strong>82</strong><span>/ 100</span></div>
-        <div className="health-status"><i /> Balanced growth</div>
+        <div className="health-score"><strong>—</strong></div>
+        <div className="health-status">Unavailable</div>
         <div className="health-divider" />
-        <p>Your portfolio is trending higher, with technology exposure driving most of today’s movement.</p>
+        <p>A portfolio health score is not currently available from verified account data.</p>
         <Link href="/assistant?prompt=What%20are%20today%27s%20portfolio%20risks" className="aside-link">Explore portfolio risks <Icon name="arrow-up-right" size={14} /></Link>
       </aside>
     </section>

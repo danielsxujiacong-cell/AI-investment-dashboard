@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useLayoutEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Icon, type IconName } from "@/components/icons";
+import { useStockMarketData } from "@/hooks/use-stock-market-data";
 
 const navigation: { label: string; href: string; icon: IconName }[] = [
   { label: "Overview", href: "/", icon: "overview" },
@@ -28,6 +29,23 @@ function Brand() {
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [theme, setTheme] = useState<Theme>("dark");
+  const marketData = useStockMarketData({ maxWatchlistSymbols: 8 });
+  const realQuotes = Object.values(marketData.liveQuotes);
+  const averageChange = realQuotes.length
+    ? realQuotes.reduce((sum, quote) => sum + quote.changePercent, 0) / realQuotes.length
+    : null;
+  const risingQuotes = realQuotes.filter((quote) => quote.changePercent > 0).length;
+  const fallingQuotes = realQuotes.filter((quote) => quote.changePercent < 0).length;
+  const pulseTitle = marketData.status === "loading"
+    ? "Market pulse · Loading"
+    : averageChange === null
+      ? marketData.stocks.length === 0 ? "Market pulse" : "Market pulse · Unavailable"
+      : "Market pulse · " + (marketData.status === "partial" ? "Partial" : "Live");
+  const pulseSubtitle = marketData.status === "loading"
+    ? "Loading Watchlist quotes…"
+    : averageChange === null
+      ? marketData.stocks.length === 0 ? "Add stocks to see Watchlist pulse" : "Finnhub quotes unavailable"
+      : `${risingQuotes} up · ${fallingQuotes} down · ${realQuotes.length} quotes`;
 
   useLayoutEffect(() => {
     const root = document.documentElement;
@@ -114,8 +132,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="sidebar-bottom">
           <div className="market-pulse">
             <div className="pulse-icon"><Icon name="activity" size={17} /></div>
-            <div><strong>Market pulse · Mock</strong><span><i className="live-dot" /> Session open</span></div>
-            <span className="pulse-value">+0.8%</span>
+            <div><strong>{pulseTitle}</strong><span>{averageChange !== null && <i className="live-dot" />}{pulseSubtitle}</span></div>
+            <span className={"pulse-value" + (averageChange !== null && averageChange < 0 ? " negative-text" : "")}>{averageChange === null ? "—" : `${averageChange >= 0 ? "+" : ""}${averageChange.toFixed(2)}%`}</span>
           </div>
           <div className="sidebar-profile">
             <div className="profile-avatar">B</div>

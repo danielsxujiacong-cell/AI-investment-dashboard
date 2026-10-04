@@ -43,7 +43,6 @@ export function WatchlistExplorer() {
   const watchlist = useWatchlist();
   const marketData = useStockMarketData({ maxWatchlistSymbols: 30 });
   const addedSymbols = useMemo(() => new Set(watchlist.stocks.map((stock) => stock.symbol)), [watchlist.stocks]);
-  const marketStocks = useMemo(() => new Map(marketData.stocks.map((stock) => [stock.symbol, stock])), [marketData.stocks]);
   const pendingQuery = query.trim();
   const effectiveSearch = pendingQuery.length >= 2 ? loadedSearch : "";
   const waitingForSearch = pendingQuery.length >= 2 && pendingQuery.toLowerCase() !== loadedSearch.toLowerCase();
@@ -115,12 +114,15 @@ export function WatchlistExplorer() {
     return { symbol, name, exchange, market: "stocks" };
   }
 
-  const trackedStocks = watchlist.stocks.map((stock) => ({
-    ...stock,
-    price: marketStocks.get(stock.symbol)?.price ?? stock.price,
-    change: marketStocks.get(stock.symbol)?.change ?? stock.change,
-    changePercent: marketStocks.get(stock.symbol)?.changePercent ?? stock.changePercent,
-  }));
+  const trackedStocks = watchlist.stocks.map((stock) => {
+    const quote = marketData.liveQuotes[stock.symbol];
+    return {
+      ...stock,
+      price: quote?.price ?? 0,
+      change: quote?.change ?? 0,
+      changePercent: quote?.changePercent ?? 0,
+    };
+  });
 
   const showsSearchHint = pendingQuery.length === 1;
   const resultHeading = pendingQuery.length >= 2 ? "Search results" : "Search stocks";
@@ -149,8 +151,8 @@ export function WatchlistExplorer() {
                   aria-label={"Open " + stock.symbol + " details"}
                 >
                   <strong>{stock.price > 0 ? "$" + stock.price.toFixed(2) : "—"}</strong>
-                  <span className={stock.changePercent >= 0 ? "positive-text" : "negative-text"}>
-                    {stock.price > 0 ? (stock.changePercent >= 0 ? "+" : "") + stock.changePercent.toFixed(2) + "%" : "Quote on open"}
+                  <span className={stock.price > 0 ? stock.changePercent >= 0 ? "positive-text" : "negative-text" : ""}>
+                    {stock.price > 0 ? (stock.changePercent >= 0 ? "+" : "") + stock.changePercent.toFixed(2) + "%" : "Unavailable"}
                   </span>
                 </Link>
                 <button
@@ -168,7 +170,7 @@ export function WatchlistExplorer() {
         ) : (
           <div className="stock-universe-empty">Your Watchlist is empty. Add a stock from search or Popular Tech.</div>
         )}
-        <p className="stock-watchlist-note">Live quotes are requested for Watchlist stocks. Open a stock to load its price history.</p>
+        <p className="stock-watchlist-note">Prices and daily changes use Finnhub quotes; unavailable quotes show N/A. Open a stock to load its price history.</p>
       </section>
 
       <section className="stock-discover-section">
