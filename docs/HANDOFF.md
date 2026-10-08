@@ -8,7 +8,7 @@
 - The user manually verified sign-in, local import, CRUD for all four collections, sign-out/re-login, and cross-device synchronization.
 - AI Assistant and Daily Brief use the shared data provider. Finnhub, Massive, Stock Universe, Fundamentals, K-line behavior, and the Cloudflare Worker secret architecture remain unchanged. AI/Finnhub/Massive secrets stay server-side.
 - Portfolio and other stock lists use the shared static-export-safe stock route helper. Daily Brief cache keys are scoped to the authenticated Supabase user or the guest namespace; account changes hide the previous cache and abort in-flight generation.
-- V6.1 build, focused local browser checks, push, Pages workflow, and key live routes were verified for the release commit recorded by Git. The local checkout lacks `NEXT_PUBLIC_MARKET_API_BASE_URL` and `NEXT_PUBLIC_SUPABASE_*`; its Worker proxy is not running. Account-scoped cache keys and stale-request cancellation were code-checked, but authenticated login/logout and two-user Brief isolation were not browser-tested.
+- V6.1 source commit `b3d5017` was deployed by Pages workflow `37732629650`. The Overview, AMD/PLTR/MRVL query routes, NVDA legacy route, and Worker AMD search endpoint were checked online. The local checkout lacks `NEXT_PUBLIC_MARKET_API_BASE_URL` and `NEXT_PUBLIC_SUPABASE_*`; its Worker proxy is not running. Account-scoped cache keys and stale-request cancellation were code-checked, but authenticated login/logout and two-user Brief isolation were not browser-tested.
 
 ## Next action
 
