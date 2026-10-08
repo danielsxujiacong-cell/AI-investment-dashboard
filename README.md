@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-**当前版本：V6.1 已实现并部署；账号级缓存验收待补。** 本版本完成详情路由、Daily Brief 账号缓存隔离与首页/文案精简；双账号实际切换及 Brief 生成需在已配置 Supabase 与 Worker 的登录会话中复测。
+**当前版本：V6.1 主要功能完成；剩余两项 Daily Brief 验收待补。** 已在生产站实测真实 GLM 生成、退出后不泄露简报、同账号重新登录恢复当天缓存；过期简报日期提示和第二账号隔离仍未验证。
 
 ## 开发阶段
 
@@ -21,7 +21,7 @@
 - V5.3：Stock Universe 与动态 Watchlist ✅
 - V5.4：Real Fundamentals / 去除明显 Mock ✅
 - V6：Supabase Auth 与跨设备个人数据同步 ✅
-- V6.1：Quality & UX Polish（实现与部署完成；账号级实测待补）
+- V6.1：Quality & UX Polish（主要功能完成；两项 Daily Brief 验收待补）
 
 ## 开发原则
 

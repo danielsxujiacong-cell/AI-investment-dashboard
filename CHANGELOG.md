@@ -5,7 +5,7 @@
 - V6.1 implementation: fixed Portfolio detail links with the shared static-export-safe route helper; retained legacy routes and routed new symbols through the query route, including holdings outside the Watchlist.
 - Isolated Daily Brief caches by Supabase user ID or guest namespace; stale account requests are aborted and cannot write to another account's cache. Previous-day briefs show their date.
 - Removed the inactive Notifications control, workspace and health overflow indicators, and permanent NEW badge; compacted Portfolio Health into a concise risk entry and corrected fixed/demo copy.
-- Quick acceptance: production build, focused lint, Portfolio CRUD/detail-route browser interactions, mobile navigation/layout, Pages workflow, and live key routes passed. The local browser had no Worker/Supabase configuration; two-account Brief/cache and authenticated login/logout remain unverified.
+- Quick acceptance: production build, focused lint, Portfolio CRUD/detail-route browser interactions, mobile navigation/layout, Pages workflow, and live key routes passed. On the deployed site, a real GLM Brief generated successfully; signing out showed Guest / `NOT GENERATED` without leakage, and signing back in restored the same current-day Brief. Still unverified: previous-day Brief labeling (no old-date cache was available) and two-account isolation, including switching accounts during generation (no second authorized account was available).
 
 ## 2026-10-04
 
