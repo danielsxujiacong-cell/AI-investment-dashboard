@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-08
+
+- V6.1 implementation: fixed Portfolio detail links with the shared static-export-safe route helper; retained legacy routes and routed new symbols through the query route, including holdings outside the Watchlist.
+- Isolated Daily Brief caches by Supabase user ID or guest namespace; stale account requests are aborted and cannot write to another account's cache. Previous-day briefs show their date.
+- Removed the inactive Notifications control, workspace and health overflow indicators, and permanent NEW badge; compacted Portfolio Health into a concise risk entry and corrected fixed/demo copy.
+- Quick acceptance: production build, focused lint, Portfolio CRUD/detail-route browser interactions, mobile navigation/layout, Pages workflow, and live key routes passed. The local browser had no Worker/Supabase configuration; two-account Brief/cache and authenticated login/logout remain unverified.
+
 ## 2026-10-04
 
 - V6 COMPLETE: reused the existing `lanlan-cloud-pet` Supabase Project; activated email/password Auth and cloud sync for Watchlist, Portfolio, Investment Memory, and Investment Notes. The user verified import, CRUD, logout/re-login, and cross-device sync. The four independent tables use RLS policies with `auth.uid() = user_id`; guest localStorage fallback and explicit empty-account import remain available.

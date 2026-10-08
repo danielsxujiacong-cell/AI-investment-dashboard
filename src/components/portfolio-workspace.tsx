@@ -7,6 +7,7 @@ import { Icon } from "@/components/icons";
 import { MarketDataStatusMessage } from "@/components/market-data-status";
 import { useStockMarketData } from "@/hooks/use-stock-market-data";
 import { usePersonalData } from "@/components/personal-data-provider";
+import { referenceFromStock, stockDetailHref } from "@/data/stock-universe";
 import type { PortfolioHolding } from "@/data/personal-data";
 
 function money(value: number) {
@@ -162,7 +163,7 @@ export function PortfolioWorkspace() {
               <button type="submit" className="primary-button" disabled={syncing}>{syncing ? "Saving…" : editingId ? "Save changes" : "Save holding"}</button>
             </div>
           </div>
-          <p className="form-help">Live quotes are available for the five symbols in your Watchlist.</p>
+          <p className="form-help">Live quotes are available for stocks on your Watchlist.</p>
         </form>
       )}
 
@@ -182,7 +183,9 @@ export function PortfolioWorkspace() {
             {positions.map(({ holding, stock, costBasis, currentPrice, currentValue, gainLoss, gainLossPercent }) => (
               <article className="position-row" key={holding.id}>
                 <div className="position-row-header">
-                  <Link href={stock ? `/stocks/${holding.symbol}` : "/watchlist"} className="position-identity">
+                  <Link href={stockDetailHref(stock
+                    ? referenceFromStock(stock)
+                    : { symbol: holding.symbol, name: holding.symbol, market: "stocks", exchange: null })} className="position-identity">
                     <span className="holding-symbol" style={{ backgroundColor: "rgba(154,199,168,.12)", color: "#9ac7a8" }}>{holding.symbol.slice(0, 1)}</span>
                     <span><strong>{holding.symbol}</strong><small>{stock?.name ?? "Quote unavailable"}</small></span>
                   </Link>

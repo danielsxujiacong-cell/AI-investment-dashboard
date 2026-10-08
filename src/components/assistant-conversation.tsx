@@ -28,7 +28,7 @@ export function AssistantConversation() {
     {
       id: 0,
       role: "assistant",
-      text: "Good morning, Blake. I can help you explore your portfolio, watchlist, or today's market themes. What would you like to look into?",
+      text: "I can help you review your portfolio, watchlist, or market data. What would you like to explore?",
     },
   ]);
   const nextId = useRef(1);
@@ -247,7 +247,7 @@ export function AssistantConversation() {
       <section className="card conversation-card" aria-label="AI conversation">
         <div className="conversation-header">
           <div className="conversation-agent-mark"><Icon name="sparkles" size={16} /></div>
-          <div><strong>Investment assistant</strong><span>{assistantStatus.available ? "AI API · contextual research" : "On-device Mock fallback"}</span></div>
+          <div><strong>Investment assistant</strong><span>{assistantStatus.available ? "AI API · contextual research" : "Local fallback"}</span></div>
           <div className="conversation-model"><i />{pending ? retrying ? "正在重试…" : "THINKING…" : assistantStatus.available ? assistantStatus.model || "AI API" : assistantStatus.checked ? "API UNAVAILABLE · MOCK" + (assistantStatus.model ? " · " + assistantStatus.model : "") : "CHECKING API…"}</div>
         </div>
         <div className="conversation-messages" role="log" aria-live="polite">
@@ -255,10 +255,10 @@ export function AssistantConversation() {
             <div key={message.id} className={"message-row " + message.role}>
               {message.role === "assistant" && <div className="message-avatar"><Icon name="sparkles" size={15} /></div>}
               <div className="message-bubble">
-                {message.role === "assistant" && <span className="message-label">{message.source === "mock" ? "MOCK FALLBACK" : message.source === "ai" ? assistantStatus.model || "AI ASSISTANT" : "NORTHSTAR AI"}</span>}
+                {message.role === "assistant" && <span className="message-label">{message.source === "mock" ? "LOCAL FALLBACK" : message.source === "ai" ? assistantStatus.model || "AI ASSISTANT" : "NORTHSTAR AI"}</span>}
                 <p>{message.text}</p>
               </div>
-              {message.role === "user" && <div className="message-user-avatar">B</div>}
+              {message.role === "user" && <div className="message-user-avatar">You</div>}
             </div>
           ))}
           {pending && (
@@ -274,7 +274,7 @@ export function AssistantConversation() {
           <span className="composer-hint">{marketData.status === "live" || marketData.status === "partial" ? "FINNHUB QUOTES" : "QUOTES UNAVAILABLE"}</span>
           <button type="submit" aria-label="Send message" disabled={!draft.trim() || pending || !ready}><Icon name="send" size={17} /></button>
         </form>
-        <p className="assistant-disclaimer">AI responses may be inaccurate and are for research only. Mock fallback responses are simulated; no trades are placed.</p>
+        <p className="assistant-disclaimer">AI responses may be inaccurate and are for research only. Local fallback responses are simulated; no trades are placed.</p>
       </section>
     </div>
   );

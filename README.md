@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-**当前版本：V6 COMPLETE。** Supabase Auth 与四类个人数据云同步已在线启用，用户已验收登录、首次本地导入、CRUD、退出重登和多设备同步。访客继续使用 localStorage；Finnhub、Massive 与 AI API Secret 架构保持原样。
+**当前版本：V6.1 已实现并部署；账号级缓存验收待补。** 本版本完成详情路由、Daily Brief 账号缓存隔离与首页/文案精简；双账号实际切换及 Brief 生成需在已配置 Supabase 与 Worker 的登录会话中复测。
 
 ## 开发阶段
 
@@ -21,26 +21,27 @@
 - V5.3：Stock Universe 与动态 Watchlist ✅
 - V5.4：Real Fundamentals / 去除明显 Mock ✅
 - V6：Supabase Auth 与跨设备个人数据同步 ✅
+- V6.1：Quality & UX Polish（实现与部署完成；账号级实测待补）
 
 ## 开发原则
 
 - 以快速交付可用 MVP 为优先，按阶段逐步迭代。
 - 保持实现简单，只在当前阶段确有需要时增加依赖和架构复杂度。
-- 报价保留 Mock Data 回退，历史图表不回退到模拟曲线；Assistant AI API 出错时回退 Mock，Daily Brief 保留上次成功内容或显示友好提示。AI Key 只放入 Worker Secret，绝不写入前端或 GitHub。
+- 报价保留明确标注的回退状态，历史图表不回退到模拟曲线；Assistant API 出错时使用本地 fallback，Daily Brief 保留当前账号上次成功内容或显示友好提示。AI Key 只放入 Worker Secret，绝不写入前端或 GitHub。
 - 每个阶段完成后更新项目状态和后续计划。
 
 ## 当前功能
 
 - Dashboard 首页用本地持仓数量与真实历史收盘价计算一个月持仓价值趋势；没有持仓或历史接口不可用时显示空态
-- NVDA、AAPL、TSLA、MSFT、AMZN 的实时行情、关注列表和股票详情；报价保留 Mock Data 回退
+- Stock Universe 搜索、动态 Watchlist 与股票详情；详情链接通过共享路由 helper 兼容原有静态股票页和新股票查询页
 - Overview / Watchlist 的真实一个月 mini chart；详情页按需请求 Massive 真实 OHLC K 线和 1D / 1W / 1M / 3M / 1Y 周期
 - 详情页按需读取 Finnhub Market Cap、TTM P/E 和 52 周区间；不可用字段明确标为 N/A / Unavailable，缺少 52 周字段时用 Massive 1Y 真实日线计算
 - 行情来源、Loading、限流和 Last updated 状态；历史 API 失败时优先显示真实缓存并自动延迟重试，不伪造价格曲线
 - Light / Dark Mode，首次跟随系统主题并保存用户选择
 - Portfolio 新增、编辑和删除个人持仓；按 Finnhub 当前价格计算市值、成本和未实现盈亏
 - 股票详情中的个人 Investment Memory，以及可新增、编辑和删除的 Investment Notes
-- AI Assistant 保留原页面与快捷问题；配置 API 后发送个人上下文进行真实对话，显示 Thinking、API unavailable 和模型名称，失败时回退 Mock
-- 首页 Daily Brief 可手动生成/刷新，按 Market Overview、Opportunities、Risks、Watchlist Focus、Portfolio Note 展示真实 GLM 简报；展示 Last generated 时间并缓存成功结果
+- AI Assistant 保留快捷问题；配置 API 后发送个人上下文进行真实对话，显示 Thinking、API unavailable 和模型名称，失败时使用明确标记的本地 fallback
+- 首页 Daily Brief 可手动生成/刷新，按 Market Overview、Opportunities、Risks、Watchlist Focus、Portfolio Note 展示 GLM 简报；按 Supabase user ID 或访客命名空间缓存，过期简报标注原日期
 - 未登录时个人投资数据保存在当前设备的 localStorage；登录后 Watchlist、Portfolio、Investment Memory、Investment Notes 从 Supabase 读取并写入
 - 首次登录时，只有四张云表全空且本地有数据才显示 “Import local data”；确认导入后本地副本保留
 - 可展开的每日 AI 市场简报

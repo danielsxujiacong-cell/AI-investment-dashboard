@@ -116,7 +116,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="workspace-switcher">
           <div className="workspace-avatar">W</div>
           <div className="workspace-copy"><strong>Personal workspace</strong><span>{user ? "Supabase account" : "Local device"}</span></div>
-          <span className="workspace-chevron">⌄</span>
         </div>
 
         <div className="sidebar-section-label">WORKSPACE</div>
@@ -127,7 +126,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link key={item.href} href={item.href} className={"nav-item" + (active ? " active" : "")} aria-current={active ? "page" : undefined}>
                 <Icon name={item.icon} size={18} />
                 <span>{item.label}</span>
-                {item.label === "AI Assistant" && <span className="nav-new">NEW</span>}
               </Link>
             );
           })}
@@ -142,7 +140,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="sidebar-profile">
             <div className="profile-avatar">{user?.email?.slice(0, 1).toUpperCase() ?? "G"}</div>
             <div className="profile-copy"><strong>{user?.email ?? "Guest"}</strong><span>{user ? "Supabase account" : "Local device"}</span></div>
-            <Icon name="more" size={17} />
           </div>
         </div>
       </aside>
@@ -163,9 +160,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
             >
               <Icon name={theme === "dark" ? "sun" : "moon"} size={18} />
-            </button>
-            <button type="button" className="icon-button notification-button" aria-label="Notifications">
-              <Icon name="bell" size={18} /><span className="notification-dot" />
             </button>
           </div>
         </header>

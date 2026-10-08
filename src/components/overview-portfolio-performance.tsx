@@ -152,11 +152,8 @@ export function OverviewPortfolioPerformance() {
       </div>
       <aside className="overview-aside">
         <div className="aside-orbit orbit-one" /><div className="aside-orbit orbit-two" />
-        <div className="aside-topline"><span>PORTFOLIO HEALTH</span><Icon name="more" size={17} /></div>
-        <div className="health-score"><strong>—</strong></div>
-        <div className="health-status">Unavailable</div>
-        <div className="health-divider" />
-        <p>A portfolio health score is not currently available from verified account data.</p>
+        <div className="aside-topline">PORTFOLIO RISKS</div>
+        <p>Portfolio health is unavailable.</p>
         <Link href="/assistant?prompt=What%20are%20today%27s%20portfolio%20risks" className="aside-link">Explore portfolio risks <Icon name="arrow-up-right" size={14} /></Link>
       </aside>
     </section>

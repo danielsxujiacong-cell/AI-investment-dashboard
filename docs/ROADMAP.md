@@ -48,6 +48,10 @@ V1–V3 现有产品结构保留。AI Assistant 已通过 Cloudflare Worker 接�
 
 继续复用现有 `lanlan-cloud-pet` Supabase Project。四张独立表为 `investment_watchlist`、`investment_portfolio`、`investment_memories`、`investment_notes`；RLS 限制为 `auth.uid() = user_id`。登录后 Supabase 是主数据源，访客继续使用 localStorage。首次登录仅在云端四类数据全部为空时提供用户确认导入，导入后本地副本保留。用户已人工验收登录、导入、四类数据 CRUD、退出重登及跨设备刷新同步。AI Assistant 与 Daily Brief 使用当前同步数据；当前刷新后同步，不启用 Realtime。Finnhub、Massive 和 AI API Secret 架构未改变。
 
+## V6.1：Quality & UX Polish
+
+Portfolio 使用共享股票详情路由，未加入 Watchlist 的持仓也能打开详情；Daily Brief 按 Supabase user ID / 访客分开缓存，账号切换时隐藏并中止旧请求写回，旧日期简报明确显示日期。移除无操作的通知与装饰按钮、精简 Portfolio 风险入口及过时欢迎语/文案。V6 数据同步、行情与 Worker 架构保持不变。Build、快速桌面/手机交互、GitHub Pages 工作流与关键路由已验收；双账号登录切换和缓存实测仍待具备本地 Supabase/Worker 配置的专用会话。
+
 ## Future（未开发）
 
 - AI 联网新闻、财报与实时事件

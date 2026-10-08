@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/icons";
 import { usePersonalData } from "@/components/personal-data-provider";
@@ -46,7 +46,8 @@ type MarketSnapshotSignal = {
   monthDirection: "up" | "down" | "flat" | "unavailable";
 };
 
-const cacheKey = "ai-investment-dashboard:daily-brief:v1";
+const cacheKeyFor = (userId: string | null) =>
+  `ai-investment-dashboard:daily-brief:v1:${userId ? `user:${userId}` : "guest"}`;
 const fallbackBrief: DailyBrief = {
   marketOverview: "No AI-generated brief is available yet. Generate one after live quotes and historical prices load.",
   opportunities: "Waiting for current market data.",
@@ -101,6 +102,12 @@ function formatGeneratedAt(value: string | null) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
+}
+
+function formatBriefDay(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" })
+    .format(new Date(Date.UTC(year, month - 1, day)));
 }
 
 function summarizeHistory(marketData: ReturnType<typeof useStockMarketData>): MarketHistorySummary[] {
@@ -200,41 +207,62 @@ function delay(milliseconds: number) {
 }
 
 export function MarketBriefCard() {
-  const { data, ready } = usePersonalData();
+  const { data, ready, authReady, user } = usePersonalData();
   const marketData = useStockMarketData(true);
   const [expanded, setExpanded] = useState(false);
-  const [record, setRecord] = useState<DailyBriefRecord | null>(null);
-  const [generating, setGenerating] = useState(false);
-  const [retrying, setRetrying] = useState(false);
-  const [feedback, setFeedback] = useState("");
+  const [savedRecord, setSavedRecord] = useState<{ scopeKey: string; record: DailyBriefRecord | null } | null>(null);
+  const [generationState, setGenerationState] = useState<{ scopeKey: string; retrying: boolean } | null>(null);
+  const [feedbackState, setFeedbackState] = useState<{ scopeKey: string | null; message: string } | null>(null);
+  const requestGeneration = useRef(0);
+  const requestController = useRef<AbortController | null>(null);
+  const scopeKey = authReady && ready ? cacheKeyFor(user?.id ?? null) : null;
+  const activeScopeKey = useRef(scopeKey);
+  const generating = Boolean(scopeKey && generationState?.scopeKey === scopeKey);
+  const retrying = generating && Boolean(generationState?.retrying);
+  const feedback = feedbackState?.scopeKey === scopeKey ? feedbackState.message : "";
+  const record = scopeKey && savedRecord?.scopeKey === scopeKey ? savedRecord.record : null;
+
+  useLayoutEffect(() => {
+    activeScopeKey.current = scopeKey;
+  }, [scopeKey]);
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(cacheKey);
-      if (raw) {
-        const parsed: unknown = JSON.parse(raw);
-        if (isDailyBriefRecord(parsed)) setRecord(parsed);
+    if (!scopeKey) return;
+
+    let current = true;
+    Promise.resolve().then(() => {
+      if (!current) return;
+      try {
+        const raw = window.localStorage.getItem(scopeKey);
+        const parsed: unknown = raw ? JSON.parse(raw) : null;
+        if (current) setSavedRecord({ scopeKey, record: isDailyBriefRecord(parsed) ? parsed : null });
+      } catch {
+        if (current) setFeedbackState({ scopeKey, message: "Saved brief storage is unavailable on this device." });
       }
-    } catch {
-      setFeedback("Saved brief storage is unavailable on this device.");
-    }
-  }, []);
+    });
+    return () => {
+      current = false;
+      requestGeneration.current += 1;
+      requestController.current?.abort();
+      requestController.current = null;
+    };
+  }, [scopeKey]);
 
   async function generateBrief() {
     if (generating) return;
-    if (!ready) {
-      setFeedback("Your saved investment context is still loading.");
+    if (!ready || !authReady || !scopeKey) {
+      setFeedbackState({ scopeKey, message: "Your saved investment context is still loading." });
       return;
     }
     if (marketData.status === "loading" || marketData.historyStatus === "loading") {
-      setFeedback("Live quotes and Massive historical prices are still loading. Try again shortly.");
+      setFeedbackState({ scopeKey, message: "Live quotes and Massive historical prices are still loading. Try again shortly." });
       return;
     }
 
     const marketHistory = summarizeHistory(marketData);
     const liveQuoteCount = Object.keys(marketData.liveQuotes).length;
     if (liveQuoteCount === 0 || marketHistory.length === 0) {
-      setFeedback("A brief needs live Finnhub quotes and Massive historical prices. They are currently unavailable; your last successful brief is unchanged.");
+      setFeedbackState({ scopeKey, message: "A brief needs live Finnhub quotes and Massive historical prices. They are currently unavailable; your last successful brief is unchanged." });
       return;
     }
     const marketSnapshot: MarketSnapshotSignal[] = marketData.stocks.map((stock) => {
@@ -310,21 +338,29 @@ export function MarketBriefCard() {
       },
     });
 
-    setGenerating(true);
-    setRetrying(false);
-    setFeedback("");
+    const requestScopeKey = scopeKey;
+    const generation = ++requestGeneration.current;
+    const controller = new AbortController();
+    requestController.current = controller;
+    const isCurrentRequest = () => generation === requestGeneration.current && activeScopeKey.current === requestScopeKey;
+
+    setGenerationState({ scopeKey: requestScopeKey, retrying: false });
+    setFeedbackState({ scopeKey: requestScopeKey, message: "" });
     let lastError: unknown = null;
     try {
       for (let attempt = 1; attempt <= 2; attempt += 1) {
+        if (!isCurrentRequest()) return;
         try {
           const response = await fetch(marketApiUrl("/api/assistant"), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             cache: "no-store",
-            signal: AbortSignal.timeout(45_000),
+            signal: AbortSignal.any([controller.signal, AbortSignal.timeout(45_000)]),
             body: requestBody,
           });
+          if (!isCurrentRequest()) return;
           const payload = await response.json().catch(() => null) as { answer?: unknown; model?: unknown; error?: unknown } | null;
+          if (!isCurrentRequest()) return;
           if (!response.ok) throw new Error(typeof payload?.error === "string" ? payload.error : `AI service is unavailable (${response.status}).`);
           if (typeof payload?.answer !== "string" || !payload.answer.trim()) throw new Error("AI service returned an empty response.");
 
@@ -337,33 +373,42 @@ export function MarketBriefCard() {
             model: typeof payload.model === "string" && payload.model.trim() ? payload.model : "glm-4-flash-250414",
             brief,
           };
-          setRecord(nextRecord);
+          if (!isCurrentRequest()) return;
+          setSavedRecord({ scopeKey: requestScopeKey, record: nextRecord });
           try {
-            window.localStorage.setItem(cacheKey, JSON.stringify(nextRecord));
-            setFeedback("");
+            window.localStorage.setItem(requestScopeKey, JSON.stringify(nextRecord));
+            setFeedbackState({ scopeKey: requestScopeKey, message: "" });
           } catch {
-            setFeedback("Brief generated, but this device could not save the local cache.");
+            setFeedbackState({ scopeKey: requestScopeKey, message: "Brief generated, but this device could not save the local cache." });
           }
           return;
         } catch (error) {
+          if (!isCurrentRequest()) return;
           lastError = error;
           if (attempt === 1) {
-            setRetrying(true);
+            setGenerationState({ scopeKey: requestScopeKey, retrying: true });
             await delay(700);
+            if (!isCurrentRequest()) return;
           }
         }
       }
-      setFeedback(record
+      if (!isCurrentRequest()) return;
+      setFeedbackState({ scopeKey: requestScopeKey, message: record
         ? "Refresh failed after one retry. Showing the last successful brief."
-        : "We couldn't generate a brief after one retry. Try again shortly; no market details were invented.");
+        : "We couldn't generate a brief after one retry. Try again shortly; no market details were invented." });
       console.warn("Daily Brief generation failed after one retry.", lastError);
     } finally {
-      setGenerating(false);
-      setRetrying(false);
+      if (requestController.current === controller) requestController.current = null;
+      if (isCurrentRequest()) {
+        setGenerationState(null);
+      }
     }
   }
 
   const brief = record?.brief ?? fallbackBrief;
+  const today = shanghaiDay(new Date());
+  const previousBrief = Boolean(record && record.day < today);
+  const briefTitle = previousBrief && record ? `Previous Brief · ${formatBriefDay(record.day)}` : "Today's AI Market Brief";
   const sections = [
     { title: "Market Overview", detail: brief.marketOverview },
     { title: "Opportunities", detail: brief.opportunities },
@@ -382,10 +427,10 @@ export function MarketBriefCard() {
       <div className="brief-title-row">
         <div>
           <span className="eyebrow">PERSONALIZED FOR YOUR WATCHLIST</span>
-          <h2>Today&apos;s AI Market Brief</h2>
+          <h2>{briefTitle}</h2>
         </div>
         <span className={"brief-quality" + (record ? " brief-quality-generated" : " brief-quality-pending")}>
-          <i /> {record ? "AI GENERATED · GLM-4-FLASH" : "NOT GENERATED"}
+          <i /> {record ? previousBrief ? "PREVIOUS · GLM-4-FLASH" : "AI GENERATED · GLM-4-FLASH" : "NOT GENERATED"}
         </span>
       </div>
 
