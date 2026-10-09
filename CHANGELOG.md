@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-09
+
+- AI Assistant and Daily Brief try same-origin `/api/assistant` routes on `invest.danielxu.cn`, with the existing Worker as a 404 fallback. Pages deployment succeeded and a live two-turn GLM history check passed through the Worker; EdgeOne's same-origin AI route still returns 404, so domestic mobile no-VPN acceptance is pending.
+
 ## 2026-10-08
 
 - V6.1 implementation: fixed Portfolio detail links with the shared static-export-safe route helper; retained legacy routes and routed new symbols through the query route, including holdings outside the Watchlist.
