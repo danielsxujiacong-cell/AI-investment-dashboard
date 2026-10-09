@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { getMockAiResponse } from "@/data/mockAi";
 import { usePersonalData } from "@/components/personal-data-provider";
 import { Icon } from "@/components/icons";
-import { useStockMarketData } from "@/hooks/use-stock-market-data";
+import { getLiveStockQuote, useStockMarketData } from "@/hooks/use-stock-market-data";
 import { marketApiUrl } from "@/data/market-api";
 
 type Message = { id: number; role: "assistant" | "user"; text: string; source?: "ai" | "mock" };
@@ -16,6 +16,23 @@ const quickQuestions = [
   "Summarize my watchlist",
   "Explain today's market movement",
 ];
+
+const nonTickerTerms = new Set(["AI", "API", "CEO", "CFO", "ETF", "FYI", "NASDAQ", "NYSE", "USD"]);
+
+function getQuestionStockSymbols(question: string) {
+  const symbols = new Set<string>();
+  const addMatches = (pattern: RegExp) => {
+    for (const match of question.matchAll(pattern)) {
+      const symbol = (match[1] ?? match[0]).toUpperCase();
+      if (!nonTickerTerms.has(symbol)) symbols.add(symbol);
+      if (symbols.size >= 5) break;
+    }
+  };
+
+  addMatches(/\$([A-Za-z]{1,5}(?:\.[A-Za-z])?)/g);
+  addMatches(/\b[A-Z]{2,5}(?:\.[A-Z])?\b/g);
+  return [...symbols].slice(0, 5);
+}
 
 export function AssistantConversation() {
   const { data, ready, storageAvailable, user } = usePersonalData();
@@ -84,6 +101,22 @@ export function AssistantConversation() {
     setRetrying(false);
 
     try {
+      const questionSymbols = getQuestionStockSymbols(prompt);
+      const requestedQuotes = await Promise.all(questionSymbols.map(async (symbol) => {
+        try {
+          return [symbol, await getLiveStockQuote(symbol)] as const;
+        } catch {
+          return [symbol, marketData.liveQuotes[symbol] ?? null] as const;
+        }
+      }));
+      const latestFinnhubQuotes = { ...marketData.liveQuotes };
+      for (const [symbol, quote] of requestedQuotes) {
+        if (quote) latestFinnhubQuotes[symbol] = quote;
+      }
+      const marketDataStatus = requestedQuotes.length === 0 || requestedQuotes.every(([, quote]) => quote)
+        ? requestedQuotes.length > 0 ? "live" : marketData.status
+        : requestedQuotes.some(([, quote]) => quote) ? "partial" : marketData.status;
+
       const requestBody = JSON.stringify({
         question: prompt,
         history,
@@ -110,8 +143,15 @@ export function AssistantConversation() {
             };
           }),
           marketDataSource: "Finnhub",
-          marketDataStatus: marketData.status,
-          latestFinnhubQuotes: marketData.liveQuotes,
+          marketDataStatus,
+          latestFinnhubQuotes,
+          marketSnapshot: requestedQuotes.map(([symbol, quote]) => ({
+            symbol,
+            currentPrice: quote?.price ?? null,
+            dailyChange: quote?.change ?? null,
+            dailyChangePercent: quote?.changePercent ?? null,
+            dailyDirection: quote ? quote.changePercent > 0 ? "up" : quote.changePercent < 0 ? "down" : "flat" : "unavailable",
+          })),
           investmentMemory: data.investmentMemory,
           investmentNotes: data.investmentNotes,
         },

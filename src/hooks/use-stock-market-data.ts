@@ -35,23 +35,24 @@ type MarketDataOptions = {
 const quoteCache = new Map<string, { expiresAt: number; quote: LiveStockQuote }>();
 const quoteRequests = new Map<string, Promise<LiveStockQuote>>();
 
-function loadQuote(symbol: string): Promise<LiveStockQuote> {
-  const cached = quoteCache.get(symbol);
+export function getLiveStockQuote(symbol: string): Promise<LiveStockQuote> {
+  const normalizedSymbol = symbol.trim().toUpperCase();
+  const cached = quoteCache.get(normalizedSymbol);
   if (cached && cached.expiresAt > Date.now()) return Promise.resolve(cached.quote);
 
-  const pending = quoteRequests.get(symbol);
+  const pending = quoteRequests.get(normalizedSymbol);
   if (pending) return pending;
 
-  const request = fetch(marketApiUrl("/api/market/quote/" + encodeURIComponent(symbol)), { cache: "no-store" })
+  const request = fetch(marketApiUrl("/api/market/quote/" + encodeURIComponent(normalizedSymbol)), { cache: "no-store" })
     .then(async (response) => {
       if (!response.ok) throw new Error("Finnhub quote request failed (" + response.status + ").");
       const quote = parseFinnhubQuote(await response.json());
-      quoteCache.set(symbol, { expiresAt: Date.now() + 30_000, quote });
+      quoteCache.set(normalizedSymbol, { expiresAt: Date.now() + 30_000, quote });
       return quote;
     })
-    .finally(() => quoteRequests.delete(symbol));
+    .finally(() => quoteRequests.delete(normalizedSymbol));
 
-  quoteRequests.set(symbol, request);
+  quoteRequests.set(normalizedSymbol, request);
   return request;
 }
 
@@ -105,7 +106,7 @@ export function useStockMarketData(input: boolean | MarketDataOptions = false): 
       }
 
       setStatus("loading");
-      const results = await Promise.allSettled(requestedStocks.map((stock) => loadQuote(stock.symbol)));
+      const results = await Promise.allSettled(requestedStocks.map((stock) => getLiveStockQuote(stock.symbol)));
       if (cancelled) return;
 
       const nextQuotes: Record<string, LiveStockQuote> = {};
