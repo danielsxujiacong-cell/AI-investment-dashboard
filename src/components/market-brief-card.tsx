@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/icons";
 import { usePersonalData } from "@/components/personal-data-provider";
-import { fetchMarketApi } from "@/data/market-api";
+import { marketApiUrl } from "@/data/market-api";
 import { useStockMarketData } from "@/hooks/use-stock-market-data";
 
 type DailyBrief = {
@@ -351,7 +351,7 @@ export function MarketBriefCard() {
       for (let attempt = 1; attempt <= 2; attempt += 1) {
         if (!isCurrentRequest()) return;
         try {
-          const response = await fetchMarketApi("/api/assistant", {
+          const response = await fetch(marketApiUrl("/api/assistant"), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             cache: "no-store",

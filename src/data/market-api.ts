@@ -13,21 +13,3 @@ export function marketApiUrl(path: string) {
 
   return configuredApiBaseUrl ? configuredApiBaseUrl + path : basePath + path;
 }
-
-export async function fetchMarketApi(path: string, init?: RequestInit) {
-  const url = marketApiUrl(path);
-  const response = await fetch(url, init);
-  const isAssistantApi = path === "/api/assistant" || path === "/api/assistant/status";
-
-  // Keep the existing Worker path available until EdgeOne's matching route is active.
-  if (
-    response.status === 404 &&
-    isAssistantApi &&
-    url === path &&
-    configuredApiBaseUrl
-  ) {
-    return fetch(configuredApiBaseUrl + path, init);
-  }
-
-  return response;
-}

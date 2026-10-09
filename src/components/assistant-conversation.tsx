@@ -5,7 +5,7 @@ import { getMockAiResponse } from "@/data/mockAi";
 import { usePersonalData } from "@/components/personal-data-provider";
 import { Icon } from "@/components/icons";
 import { getLiveStockQuote, useStockMarketData } from "@/hooks/use-stock-market-data";
-import { fetchMarketApi } from "@/data/market-api";
+import { marketApiUrl } from "@/data/market-api";
 
 type Message = { id: number; role: "assistant" | "user"; text: string; source?: "ai" | "mock" };
 type AssistantStatus = { checked: boolean; available: boolean; model: string | null };
@@ -63,7 +63,7 @@ export function AssistantConversation() {
 
   useEffect(() => {
     let cancelled = false;
-    fetchMarketApi("/api/assistant/status", { cache: "no-store" })
+    fetch(marketApiUrl("/api/assistant/status"), { cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) throw new Error("AI status is unavailable.");
         return response.json() as Promise<{ available?: boolean; model?: string | null }>;
@@ -160,7 +160,7 @@ export function AssistantConversation() {
       let result: { answer?: unknown; model?: unknown } | null = null;
       for (let attempt = 1; attempt <= 2; attempt += 1) {
         try {
-          const response = await fetchMarketApi("/api/assistant", {
+          const response = await fetch(marketApiUrl("/api/assistant"), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             cache: "no-store",
