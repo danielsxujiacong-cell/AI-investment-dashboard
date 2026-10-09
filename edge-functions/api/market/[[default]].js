@@ -10,5 +10,11 @@ export default async function onRequest(context) {
   }
 
   const upstreamUrl = new URL(incomingUrl.pathname + incomingUrl.search, MARKET_API_ORIGIN);
-  return fetch(new Request(upstreamUrl, request));
+  const headers = new Headers();
+  for (const name of ["origin", "access-control-request-method", "access-control-request-headers"]) {
+    const value = request.headers.get(name);
+    if (value) headers.set(name, value);
+  }
+
+  return fetch(upstreamUrl, { method: request.method, headers });
 }
