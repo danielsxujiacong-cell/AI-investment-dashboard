@@ -16,5 +16,12 @@ export default async function onRequest(context) {
     if (value) headers.set(name, value);
   }
 
-  return fetch(upstreamUrl, { method: request.method, headers });
+  try {
+    return await fetch(upstreamUrl, { method: request.method, headers });
+  } catch {
+    return new Response(JSON.stringify({ error: "Market data upstream is temporarily unavailable." }), {
+      status: 502,
+      headers: { "Cache-Control": "no-store", "Content-Type": "application/json; charset=utf-8" },
+    });
+  }
 }
