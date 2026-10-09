@@ -12,7 +12,11 @@ let client: SupabaseClient | null = null;
 export function getSupabaseClient() {
   if (!supabaseUrl || !publishableKey) return null;
   if (!client) {
-    client = createClient(supabaseUrl, publishableKey, {
+    const clientUrl = typeof window !== "undefined" && window.location.hostname === "invest.danielxu.cn"
+      ? new URL("/supabase", window.location.origin).toString()
+      : supabaseUrl;
+
+    client = createClient(clientUrl, publishableKey, {
       auth: {
         autoRefreshToken: true,
         detectSessionInUrl: false,
