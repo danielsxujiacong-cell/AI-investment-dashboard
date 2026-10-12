@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-**当前版本：V6.1 主要功能完成；剩余两项 Daily Brief 验收待补。** 已在生产站实测真实 GLM 生成、退出后不泄露简报、同账号重新登录恢复当天缓存；过期简报日期提示和第二账号隔离仍未验证。
+**当前版本：V6.2 Market-first Homepage 已完成实现，等待线上发布验收；V6.1 仍有两项 Daily Brief 验收待补。** 已在生产站实测真实 GLM 生成、退出后不泄露简报、同账号重新登录恢复当天缓存；过期简报日期提示和第二账号隔离仍未验证。
 
 ## 开发阶段
 
@@ -22,6 +22,7 @@
 - V5.4：Real Fundamentals / 去除明显 Mock ✅
 - V6：Supabase Auth 与跨设备个人数据同步 ✅
 - V6.1：Quality & UX Polish（主要功能完成；两项 Daily Brief 验收待补）
+- V6.2：Market-first Homepage（实现完成；线上发布验收待完成）
 
 ## 开发原则
 
@@ -32,9 +33,10 @@
 
 ## 当前功能
 
-- Dashboard 首页用本地持仓数量与真实历史收盘价计算一个月持仓价值趋势；没有持仓或历史接口不可用时显示空态
+- Dashboard 首页以 Stock Universe 搜索、8 只精选科技股的 Finnhub 报价和 Massive 一个月真实收盘价趋势为主；无数据明确显示 Unavailable，访客无需登录即可浏览
+- Portfolio 页面保留总持仓估值，并展示按当前持仓数量与真实历史收盘价计算的一个月组合价值趋势；历史请求最多覆盖 8 个持仓以保护行情限额
 - Stock Universe 搜索、动态 Watchlist 与股票详情；详情链接通过共享路由 helper 兼容原有静态股票页和新股票查询页
-- Overview / Watchlist 的真实一个月 mini chart；详情页按需请求 Massive 真实 OHLC K 线和 1D / 1W / 1M / 3M / 1Y 周期
+- Watchlist 的真实一个月 mini chart；详情页按需请求 Massive 真实 OHLC K 线和 1D / 1W / 1M / 3M / 1Y 周期
 - 详情页按需读取 Finnhub Market Cap、TTM P/E 和 52 周区间；不可用字段明确标为 N/A / Unavailable，缺少 52 周字段时用 Massive 1Y 真实日线计算
 - 行情来源、Loading、限流和 Last updated 状态；历史 API 失败时优先显示真实缓存并自动延迟重试，不伪造价格曲线
 - Light / Dark Mode，首次跟随系统主题并保存用户选择

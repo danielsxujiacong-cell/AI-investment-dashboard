@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { InvestmentNotes } from "@/components/investment-notes";
+import { PortfolioPerformanceChart } from "@/components/portfolio-performance-chart";
 import { Icon } from "@/components/icons";
 import { MarketDataStatusMessage } from "@/components/market-data-status";
 import { useStockMarketData } from "@/hooks/use-stock-market-data";
@@ -140,6 +141,8 @@ export function PortfolioWorkspace() {
           </span>
         </section>
       </div>
+
+      <PortfolioPerformanceChart />
 
       {formOpen && (
         <form className="card personal-form holding-form" onSubmit={submitHolding}>

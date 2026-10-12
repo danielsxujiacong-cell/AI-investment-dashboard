@@ -2,7 +2,10 @@
 
 ## Current state
 
-- Project status: **V6.1 major functionality complete; two Daily Brief acceptance items remain**. Canonical checkout is `D:\_Codex project\01_Active\AI-investment-dashboard`, branch `main`.
+- Project status: **V6.2 Market-first Homepage implementation complete; GitHub Pages release verification pending. V6.1 still has two Daily Brief acceptance items remaining.** Canonical checkout is `D:\_Codex project\01_Active\AI-investment-dashboard`, branch `main`.
+- V6.2 replaces the personal-asset-first `/` view with the Northstar market search, eight featured technology stocks, real Finnhub quotes, cached Massive 1M trends, the existing guest/account-scoped GLM Brief, and compact Watchlist / Portfolio / Assistant links. Search reuses `/api/market/stocks`; stock links use the shared static-export-safe route helper. Missing prices and trends show Unavailable.
+- The real one-month portfolio history now appears on Portfolio, next to its existing value and gain/loss summaries. Portfolio CRUD and personal-data sync code were not changed. Homepage and Portfolio history requests remain limited to the curated list or up to eight held symbols.
+- `BUILD_FOR_GITHUB_PAGES=true npm run build` and focused ESLint passed. The local desktop and 390px / 320px mobile layouts were reviewed. The local market proxy was not running, so live data, directory search, and the GLM request still need production verification.
 - The existing `lanlan-cloud-pet` Supabase Project is reused. Its four app-specific tables are `investment_watchlist`, `investment_portfolio`, `investment_memories`, and `investment_notes`; owner RLS policies enforce `auth.uid() = user_id`.
 - Signed-in users use Supabase as the primary source for all four collections. Guests continue using localStorage. The explicit local import is available only when all cloud collections are empty; local data remains as a backup. Sign-out returns to local data without exposing cloud state. Sync occurs on refresh; Realtime is out of scope.
 - The user manually verified sign-in, local import, CRUD for all four collections, sign-out/re-login, and cross-device synchronization.
@@ -15,4 +18,4 @@
 
 ## Next action
 
-Next action: after EdgeOne automatically deploys the new function, verify the public status endpoint and two-turn chat from a domestic mobile device without VPN. Separately, when a prior-date Brief is naturally available or a disposable fixture can be used safely, verify its previous-day label; with a second authorized test account, verify account cache isolation and switching accounts during generation. Future directions only: AI news/filings/real-time events, fuller Portfolio Health, and Daily/Morning Brief automation.
+Next action: commit and push the V6.2 source to `main`, wait for the GitHub Pages workflow, then check the public homepage, live quotes, Stock Universe search, and representative stock routes. The existing EdgeOne status/chat checks and V6.1 previous-day/two-account Brief acceptance remain separate follow-up items. Future directions only: AI news/filings/real-time events, fuller Portfolio Health, and Daily/Morning Brief automation.
