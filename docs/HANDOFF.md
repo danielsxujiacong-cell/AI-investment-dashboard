@@ -2,10 +2,10 @@
 
 ## Current state
 
-- Project status: **V6.2 Market-first Homepage implementation complete; GitHub Pages release verification pending. V6.1 still has two Daily Brief acceptance items remaining.** Canonical checkout is `D:\_Codex project\01_Active\AI-investment-dashboard`, branch `main`.
+- Project status: **V6.2 Market-first Homepage deployed and checked online. V6.1 still has two Daily Brief acceptance items remaining.** Canonical checkout is `D:\_Codex project\01_Active\AI-investment-dashboard`, branch `main`.
 - V6.2 replaces the personal-asset-first `/` view with the Northstar market search, eight featured technology stocks, real Finnhub quotes, cached Massive 1M trends, the existing guest/account-scoped GLM Brief, and compact Watchlist / Portfolio / Assistant links. Search reuses `/api/market/stocks`; stock links use the shared static-export-safe route helper. Missing prices and trends show Unavailable.
 - The real one-month portfolio history now appears on Portfolio, next to its existing value and gain/loss summaries. Portfolio CRUD and personal-data sync code were not changed. Homepage and Portfolio history requests remain limited to the curated list or up to eight held symbols.
-- `BUILD_FOR_GITHUB_PAGES=true npm run build` and focused ESLint passed. The local desktop and 390px / 320px mobile layouts were reviewed. The local market proxy was not running, so live data, directory search, and the GLM request still need production verification.
+- `BUILD_FOR_GITHUB_PAGES=true npm run build` and focused ESLint passed. The local desktop and 390px / 320px mobile layouts were reviewed. Pages workflow `38213508190` succeeded for commit `283617e`; the public homepage, NVDA legacy detail route, PLTR query route, and Portfolio route returned HTTP 200. The existing Worker returned a live NVDA quote, matched NVDA in Stock Universe search, and returned 20 points for 1M history. The UI renders these through the existing shared data functions; missing values remain Unavailable.
 - The existing `lanlan-cloud-pet` Supabase Project is reused. Its four app-specific tables are `investment_watchlist`, `investment_portfolio`, `investment_memories`, and `investment_notes`; owner RLS policies enforce `auth.uid() = user_id`.
 - Signed-in users use Supabase as the primary source for all four collections. Guests continue using localStorage. The explicit local import is available only when all cloud collections are empty; local data remains as a backup. Sign-out returns to local data without exposing cloud state. Sync occurs on refresh; Realtime is out of scope.
 - The user manually verified sign-in, local import, CRUD for all four collections, sign-out/re-login, and cross-device synchronization.
@@ -18,4 +18,4 @@
 
 ## Next action
 
-Next action: commit and push the V6.2 source to `main`, wait for the GitHub Pages workflow, then check the public homepage, live quotes, Stock Universe search, and representative stock routes. The existing EdgeOne status/chat checks and V6.1 previous-day/two-account Brief acceptance remain separate follow-up items. Future directions only: AI news/filings/real-time events, fuller Portfolio Health, and Daily/Morning Brief automation.
+V6.2 source is committed and pushed to `main`; the Pages deployment and online checks passed. Remaining acceptance is from V6.1: verify previous-day Brief labeling when a real old-date cache is available, and verify isolation between two authorized accounts (including switching during generation) when a second account is available. The existing EdgeOne status/chat checks remain separate follow-up items. Future directions only: AI news/filings/real-time events, fuller Portfolio Health, and Daily/Morning Brief automation.

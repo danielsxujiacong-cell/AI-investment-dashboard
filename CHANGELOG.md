@@ -4,7 +4,7 @@
 
 - V6.2: redesign `/` as a market-first research homepage with Stock Universe search, eight featured equities, real Finnhub quotes, cached Massive one-month trends, and the existing guest/account-scoped GLM Market Brief.
 - Move the real portfolio value history to Portfolio; keep Portfolio estimates, position CRUD, and Supabase/local data behavior intact. Homepage quote and history states never substitute sample prices for unavailable data.
-- Production build and focused lint passed. Desktop and narrow mobile layouts were reviewed locally; GitHub Pages deployment verification is pending.
+- Production build and focused lint passed. Desktop and 390px / 320px mobile layouts were reviewed locally. GitHub Pages workflow `38213508190` succeeded; the live homepage, NVDA detail route, PLTR query route, Portfolio route, and Worker quote/search/1M-history endpoints returned successfully with real data.
 
 ## 2026-10-09
 
