@@ -159,7 +159,7 @@ function validateBriefMarketData(brief: DailyBrief, snapshot: MarketSnapshotSign
     if (item.currentPrice === null) return false;
     const rounded = item.currentPrice.toFixed(2);
     const compact = rounded.replace(/\.0+$/, "").replace(/(\.\d*?)0+$/, "$1");
-    return [rounded, compact].some((price) => new RegExp(`(?:^|[^\\d.])${price.replace(".", "\\.")}(?:$|[^\\d.])`).test(brief.watchlistFocus));
+    return [rounded, compact].some((price) => new RegExp(`(?<![\\d.])${price.replace(".", "\\.")}(?!\\d|\\.\\d)`).test(brief.watchlistFocus));
   });
   if (!hasQuotedFocus) throw new Error("The Watchlist Focus section must quote a live Finnhub price.");
 
@@ -473,3 +473,4 @@ export function MarketBriefCard() {
     </section>
   );
 }
+
