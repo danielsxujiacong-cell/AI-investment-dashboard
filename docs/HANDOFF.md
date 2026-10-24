@@ -19,3 +19,8 @@
 ## Next action
 
 V6.2 source is committed and pushed to `main`; the Pages deployment and online checks passed. Remaining acceptance is from V6.1: verify previous-day Brief labeling when a real old-date cache is available, and verify isolation between two authorized accounts (including switching during generation) when a second account is available. The existing EdgeOne status/chat checks remain separate follow-up items. Future directions only: AI news/filings/real-time events, fuller Portfolio Health, and Daily/Morning Brief automation.
+
+## 2026-10-24 · SEO
+
+公开市场首页采用中文 SEO 信息及 canonical；根布局默认 noindex,nofollow，仅首页允许收录。站点地图只列首页。Next 构建和 TypeScript 通过；导出产物核对个人功能与股票页 noindex。
+推送后需核对自定义域名已更新；搜索平台归属验证与 sitemap 提交由用户完成。

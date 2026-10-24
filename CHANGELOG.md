@@ -56,3 +56,7 @@
 - Keep Finnhub current quotes and move historical OHLC, overview/watchlist mini charts, portfolio performance, and stock-detail candles to Massive through the server-side Worker.
 - Keep Massive API credentials in ignored `.env.local` and Worker Secrets; never expose them to GitHub Pages.
 - Show Massive Basic end-of-day recency separately from Finnhub current quotes, and remove empty Investment Memory records when cleared.
+
+## 2026-10-24 · 最小 SEO 优化
+
+- 公开市场首页采用中文 SEO 信息及 canonical；根布局默认 noindex,nofollow，仅首页允许收录。站点地图只列首页。Next 构建和 TypeScript 通过；导出产物核对个人功能与股票页 noindex。

@@ -6,8 +6,10 @@ import { MarketBriefCard } from "@/components/market-brief-card";
 import { StockUniverseSearch } from "@/components/stock-universe-search";
 
 export const metadata: Metadata = {
-  title: "Explore the Market",
-  description: "Real market data and AI-powered research for public companies.",
+  title: { absolute: "AI 投资研究看板｜市场行情与 AI 研究 · Daniel Xu" },
+  description: "浏览公开公司行情与 AI 投资研究入口，搜索美股并查看精选公司市场信息；个人持仓、关注列表和 AI 对话需登录。",
+  alternates: { canonical: "https://invest.danielxu.cn/" },
+  robots: { index: true, follow: true },
 };
 
 const shortcuts = [

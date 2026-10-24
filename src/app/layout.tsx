@@ -5,11 +5,13 @@ import { PersonalDataProvider } from "@/components/personal-data-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://invest.danielxu.cn"),
+  robots: { index: false, follow: false },
   title: {
-    default: "AI Investment Dashboard",
+    default: "AI 投资研究看板｜Daniel Xu",
     template: "%s · Northstar",
   },
-  description: "A personal investment research workspace with live stock quotes and illustrative portfolio insights.",
+  description: "Daniel Xu 的 AI 投资研究看板，提供公开市场行情与公司研究入口，个人持仓、关注列表和 AI 对话需登录。",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

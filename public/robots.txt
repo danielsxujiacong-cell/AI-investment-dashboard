@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /supabase/
+Sitemap: https://invest.danielxu.cn/sitemap.xml
